@@ -3,18 +3,19 @@ local AVOIDANCE_DISTANCE_GEAR = 7    -- Safe distance when enemy has gear
 local AVOIDANCE_DISTANCE_NO_GEAR = 5 -- Safe distance when no gear
 local ATTACK_DISTANCE = 18           -- Distance to activate tool
 local DODGE_DISTANCE = 4             -- Distance to dodge when enemy attacks
-local STRAFE_OFFSET = 3              -- Strafing distance when close
-local STRAFE_SWITCH_FRAMES = 30      -- Frames before switching strafe direction
-local SPIN_SPEED = 3.5                 -- Multiplier for spin (increase to spin faster)
+local STRAFE_RADIUS = 3              -- Radius for circular strafing
+local STRAFE_SPEED = 2               -- Speed of strafing orbit (higher = faster)
+local SPIN_SPEED = 3.5               -- Multiplier for spin (combat flair)
+local MOVEMENT_LERP = 0.25           -- Faster interpolation for snappier movement
 
--- All local variables and services are declared up front
+-- Services and variables
 local player = game.Players.LocalPlayer
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
--- Local helper functions
+-- Helper functions (unchanged)
 local function generateRandomName()
     local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     local name = ""
@@ -39,11 +40,8 @@ local function findClosestHumanoidRootPart()
         if part:IsA("BasePart") and part.Name == "HumanoidRootPart" and part.Parent ~= player.Character then
             if _G.huntMode == 1 then
                 local plr = game.Players:GetPlayerFromCharacter(part.Parent)
-                if not plr then
-                    continue
-                end
+                if not plr then continue end
             end
-
             local humanoid = part.Parent:FindFirstChild("Humanoid")
             if humanoid and humanoid.Health > 0 then
                 local distance = (part.Position - localPlayerPosition).Magnitude
@@ -63,11 +61,9 @@ local function autoTarget()
         _G.x = nil
         return 
     end
-
     if _G.x and (not _G.x:FindFirstChild("Humanoid") or _G.x.Humanoid.Health <= 0) then
         _G.x = nil
     end
-
     if _G.x then
         local currentDist = (_G.x.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
         local closestDist = (closestRootPart.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
@@ -115,15 +111,16 @@ local function getOptimalAttackPosition(target)
         return Vector3.new(0, 0, 0) 
     end
     local targetRoot = target.HumanoidRootPart
-    local basePosition = targetRoot.Position
+    local basePosition = targetRoot.Position + (targetRoot.Velocity * 0.1)
+    -- Bias toward enemy's left side (player's right, -RightVector)
     if isHoldingGearInRightHand(target) then
-        return basePosition + targetRoot.CFrame.RightVector * -7 + targetRoot.CFrame.LookVector * -3
+        return basePosition + targetRoot.CFrame.RightVector * -5 + targetRoot.CFrame.LookVector * -3
     else
         return basePosition + targetRoot.CFrame.RightVector * -4 + targetRoot.CFrame.LookVector * -2
     end
 end
 
--- Global variables (used to store state)
+-- Global variables
 _G.x = nil        -- Target
 _G.e = nil
 _G.rage = 0
@@ -131,7 +128,7 @@ _G.y = 0          -- Combat mode toggle
 _G.pos = nil
 _G.huntMode = 0   -- Hunt mode toggle
 
--- UI Setup
+-- UI Setup (unchanged)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = generateRandomName()
 ScreenGui.Parent = CoreGui
@@ -140,7 +137,7 @@ ScreenGui.ResetOnSpawn = false
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 200, 0, 150)
-MainFrame.Position = UDim2.new(0.5, -100, 0.5, -75) -- Centered
+MainFrame.Position = UDim2.new(0.5, -100, 0.5, -75)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
@@ -237,6 +234,7 @@ CloseButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
+-- Improved Bot Logic
 local function initBotLogic()
     delay(5, function()
         local bg = Instance.new("BodyGyro", game.ReplicatedStorage)
@@ -244,8 +242,7 @@ local function initBotLogic()
         bg.P = 30000
         bg.MaxTorque = Vector3.new(400000000, 400000000, 400000000)
 
-        local strafeCounter = 0
-        local strafeDirection = STRAFE_OFFSET
+        local strafeAngle = math.pi -- Start on enemy's left side (180 degrees)
 
         RunService.RenderStepped:Connect(function()
             if not player.Character or not player.Character:FindFirstChild("Humanoid") or player.Character.Humanoid.Health <= 0 then
@@ -260,32 +257,36 @@ local function initBotLogic()
                 bg.Parent = playerRoot
                 local targetRoot = _G.x.HumanoidRootPart
 
-                local torso = playerRoot.CFrame.p + playerRoot.CFrame.LookVector + playerRoot.CFrame.RightVector
-                local torso2 = targetRoot.Position + targetRoot.Velocity / 10
+                -- Face the target
+                local torso = playerRoot.CFrame.p + playerRoot.CFrame.LookVector
+                local torso2 = targetRoot.Position + (targetRoot.Velocity * 0.1)
                 bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.Y, 0), torso2 - Vector3.new(0, torso2.Y, 0))
 
+                -- Base position with velocity anticipation
                 local optimalPos = getOptimalAttackPosition(_G.x)
-                _G.pos = optimalPos + playerRoot.CFrame.RightVector * STRAFE_OFFSET
-
-                if targetRoot.Velocity.Magnitude > 5 then
-                    if isHoldingGearInRightHand(_G.x) then
-                        _G.pos = optimalPos + targetRoot.CFrame.RightVector * -3 + targetRoot.CFrame.LookVector * -2 - targetRoot.Velocity / 2.5
-                    else
-                        _G.pos = targetRoot.Position + targetRoot.CFrame.RightVector * -2 + targetRoot.CFrame.LookVector * -1 - targetRoot.Velocity / 3
-                    end
-                end
-
                 local distanceToTarget = (targetRoot.Position - playerRoot.Position).Magnitude
-                local isClose = distanceToTarget <= 10
-                if isClose then
-                    _G.pos = targetRoot.Position + targetRoot.CFrame.RightVector * -3 + targetRoot.CFrame.LookVector * -1 + playerRoot.CFrame.RightVector * strafeDirection
-                    strafeCounter = strafeCounter + 1
-                    if strafeCounter >= STRAFE_SWITCH_FRAMES then
-                        strafeDirection = -strafeDirection
-                        strafeCounter = 0
-                    end
+
+                -- Circular strafing, biased to enemy's left (player's right)
+                strafeAngle = strafeAngle + (STRAFE_SPEED * 0.016)
+                local strafeOffset = Vector3.new(
+                    math.cos(strafeAngle) * STRAFE_RADIUS,
+                    0,
+                    math.sin(strafeAngle) * STRAFE_RADIUS
+                )
+                _G.pos = optimalPos + (targetRoot.CFrame:VectorToWorldSpace(strafeOffset))
+
+                -- Force position to stay off enemy's right side (positive RightVector)
+                local relativePos = targetRoot.CFrame:PointToObjectSpace(_G.pos)
+                if relativePos.X > 0 then -- If on enemy's right
+                    _G.pos = _G.pos - targetRoot.CFrame.RightVector * (relativePos.X + STRAFE_RADIUS) -- Push back to left
                 end
 
+                -- Adjust position based on enemy movement
+                if targetRoot.Velocity.Magnitude > 5 then
+                    _G.pos = _G.pos - (targetRoot.Velocity * 0.2)
+                end
+
+                -- Avoidance logic
                 local avoidancePos = targetRoot.Position
                 if isHoldingGearInRightHand(_G.x) then
                     local tool = _G.x:FindFirstChildOfClass("Tool")
@@ -300,7 +301,7 @@ local function initBotLogic()
 
                 local safeDistance = isHoldingGearInRightHand(_G.x) and AVOIDANCE_DISTANCE_GEAR or AVOIDANCE_DISTANCE_NO_GEAR
                 if isEnemyAttacking(_G.x) then
-                    safeDistance = safeDistance + 3
+                    safeDistance = safeDistance + 2
                 end
 
                 local vectorToAvoid = avoidancePos - _G.pos
@@ -310,32 +311,36 @@ local function initBotLogic()
                     _G.pos = _G.pos + directionAway * (safeDistance - distanceToAvoid)
                 end
 
-                local vectorToPlayer = (playerRoot.Position - targetRoot.Position).Unit
-                local enemyLookVector = targetRoot.CFrame.LookVector
-                if enemyLookVector:Dot(vectorToPlayer) > 0.8 and isEnemyAttacking(_G.x) then
-                    local dodgeDirection = (-targetRoot.CFrame.LookVector + -targetRoot.CFrame.RightVector).Unit
+                -- Proactive dodging
+                local enemyTool = _G.x:FindFirstChildOfClass("Tool")
+                if enemyTool and enemyTool:FindFirstChild("Handle") and enemyTool.Handle.Velocity.Magnitude > 8 and distanceToTarget < 12 then
+                    local dodgeDirection = (playerRoot.Position - targetRoot.Position).Unit:Cross(Vector3.new(0, 1, 0))
+                    -- Bias dodge to enemy's left
+                    if dodgeDirection:Dot(targetRoot.CFrame.RightVector) > 0 then
+                        dodgeDirection = -dodgeDirection
+                    end
                     _G.pos = _G.pos + dodgeDirection * DODGE_DISTANCE
                 end
 
-                if targetRoot.Position.Y - 0.5 > playerRoot.Position.Y then
-                    delay(0, function()
-                        player.Character.Humanoid.Jump = true 
+                -- Jump logic
+                if targetRoot.Position.Y - playerRoot.Position.Y > 1 and player.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Jumping then
+                    delay(0.1, function()
+                        player.Character.Humanoid.Jump = true
                     end)
                 end
 
+                -- Attack (original behavior, no delay)
                 if distanceToTarget <= ATTACK_DISTANCE then
                     local tool = player.Character:FindFirstChildOfClass("Tool")
-                    if tool then 
-                        tool:Activate() 
-                    end
+                    if tool then tool:Activate() end
                 end
 
-                -- Spin/oscillation speed is controlled by SPIN_SPEED.
-                local oscillation = math.sin(tick() * SPIN_SPEED) * math.rad(30)
-                -- If desired, you can adjust the math.rad(30) part to change the amplitude.
-                
-                -- Smoothly interpolate to the target position
-                local newPos = playerRoot.Position:Lerp(_G.pos, 0.15)
+                -- Spin flair during combat
+                local spinOffset = math.sin(tick() * SPIN_SPEED) * 0.5
+                _G.pos = _G.pos + playerRoot.CFrame.RightVector * spinOffset
+
+                -- Smooth movement
+                local newPos = playerRoot.Position:Lerp(_G.pos, MOVEMENT_LERP)
                 player.Character.Humanoid:MoveTo(newPos)
             else
                 bg.Parent = game.ReplicatedStorage
