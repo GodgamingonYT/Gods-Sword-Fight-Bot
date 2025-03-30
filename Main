@@ -1,0 +1,432 @@
+-- Constants for easy adjustment
+local AVOIDANCE_DISTANCE_GEAR = 7    -- Safe distance when enemy has gear
+local AVOIDANCE_DISTANCE_NO_GEAR = 5 -- Safe distance when no gear
+local ATTACK_DISTANCE = 20           -- Distance to activate tool
+local DODGE_DISTANCE = 4             -- Distance to dodge when enemy attacks
+local STRAFE_OFFSET = 3              -- Strafing distance when close
+local STRAFE_SWITCH_FRAMES = 30      -- Frames before switching strafe direction
+
+-- Global variables
+_G.x = nil  -- Target
+_G.e = nil
+_G.rage = 0
+_G.y = 0    -- Combat mode toggle
+_G.pos = nil
+_G.huntMode = 0 -- Hunt mode toggle
+
+-- Services and player
+local player = game.Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+-- Local functions
+local function generateRandomName()
+    local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    local name = ""
+    for i = 1, 15 do
+        local randIndex = math.random(1, #chars)
+        name = name .. chars:sub(randIndex, randIndex)
+    end
+    return name
+end
+
+local function findClosestHumanoidRootPart()
+    local closestRootPart = nil
+    local closestDistance = math.huge
+    local localPlayerPosition = player.Character 
+        and player.Character:FindFirstChild("HumanoidRootPart") 
+        and player.Character.HumanoidRootPart.Position
+    if not localPlayerPosition then 
+        return nil 
+    end
+
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") and part.Name == "HumanoidRootPart" and part.Parent ~= player.Character then
+            -- When hunt mode is on, only consider characters tied to players
+            if _G.huntMode == 1 then
+                local plr = game.Players:GetPlayerFromCharacter(part.Parent)
+                if not plr then
+                    continue
+                end
+            end
+
+            local humanoid = part.Parent:FindFirstChild("Humanoid")
+            if humanoid and humanoid.Health > 0 then
+                local distance = (part.Position - localPlayerPosition).Magnitude
+                if distance < closestDistance then
+                    closestDistance = distance
+                    closestRootPart = part.Parent
+                end
+            end
+        end
+    end
+    return closestRootPart
+end
+
+local function autoTarget()
+    local closestRootPart = findClosestHumanoidRootPart()
+    if not closestRootPart then 
+        _G.x = nil
+        return 
+    end
+
+    if _G.x and (not _G.x:FindFirstChild("Humanoid") or _G.x.Humanoid.Health <= 0) then
+        _G.x = nil
+    end
+
+    if _G.x then
+        local currentDist = (_G.x.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+        local closestDist = (closestRootPart.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
+        if closestRootPart ~= _G.x and closestDist < currentDist then
+            _G.x = closestRootPart
+            print("Switched to closer target: " .. _G.x.Name)
+            game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+                Text = "Switched target to: " .. _G.x.Name,
+                Color = Color3.fromRGB(0, 255, 255),
+                Font = Enum.Font.SourceSansBold,
+                TextSize = 18
+            })
+        end
+    else
+        _G.x = closestRootPart
+        if _G.x then
+            print("Auto-targeting: " .. _G.x.Name)
+            game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+                Text = "Auto-targeting: " .. _G.x.Name,
+                Color = Color3.fromRGB(0, 255, 255),
+                Font = Enum.Font.SourceSansBold,
+                TextSize = 18
+            })
+        end
+    end
+end
+
+local function isHoldingGearInRightHand(character)
+    return character and character:FindFirstChildOfClass("Tool") ~= nil
+end
+
+local function isEnemyAttacking(enemy)
+    local tool = enemy and enemy:FindFirstChildOfClass("Tool")
+    if tool then
+        local handle = tool:FindFirstChild("Handle")
+        if handle and handle.Velocity.Magnitude > 10 then
+            return true
+        end
+    end
+    return false
+end
+
+local function getOptimalAttackPosition(target)
+    if not target or not target:FindFirstChild("HumanoidRootPart") then 
+        return Vector3.new(0, 0, 0) 
+    end
+    local targetRoot = target.HumanoidRootPart
+    local basePosition = targetRoot.Position
+    if isHoldingGearInRightHand(target) then
+        return basePosition + targetRoot.CFrame.RightVector * -7 + targetRoot.CFrame.LookVector * -3
+    else
+        return basePosition + targetRoot.CFrame.RightVector * -4 + targetRoot.CFrame.LookVector * -2
+    end
+end
+
+-- Grip configurations
+local Grips = {
+    Up = CFrame.new(0, 0, -1.70000005, 0, 0, 1, 1, 0, 0, 0, 1, 0),
+    Out = CFrame.new(0, 0, -1.70000005, 0, 1, 0, 1, 0, 0, 0, 0, -1)
+}
+
+print("h:loaded (  :")
+
+-- UI Setup
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = generateRandomName()
+ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 200, 0, 150)
+MainFrame.Position = UDim2.new(0.5, -100, 0.5, -75) -- Centered
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 20)
+UICorner.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0, 100, 0, 30)
+Title.Position = UDim2.new(0, 10, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "God's Sword Bot"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = MainFrame
+
+-- Dragging Logic (using UIDragDetector)
+MainFrame.Active = true
+local dragDetector = Instance.new("UIDragDetector")
+dragDetector.Parent = MainFrame
+
+-- Toggle Button (moved up for a better look)
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 100, 0, 40)
+ToggleButton.Position = UDim2.new(0.5, -50, 0, 30)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ToggleButton.Text = _G.y == 1 and "Disable" or "Enable"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.Gotham
+ToggleButton.TextSize = 14
+ToggleButton.Parent = MainFrame
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 10)
+ToggleCorner.Parent = ToggleButton
+
+ToggleButton.MouseButton1Click:Connect(function()
+    _G.y = (_G.y == 1) and 0 or 1
+    ToggleButton.Text = _G.y == 1 and "Disable" or "Enable"
+    ToggleButton.BackgroundColor3 = _G.y == 1 and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(50, 50, 50)
+    game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+        Text = "Sword fight bot " .. (_G.y == 1 and "Enabled" or "Disabled"),
+        Color = Color3.fromRGB(255, 255, 0),
+        Font = Enum.Font.SourceSansBold,
+        TextSize = 18
+    })
+end)
+
+-- Hunt Mode Button (moved further down)
+local HuntButton = Instance.new("TextButton")
+HuntButton.Size = UDim2.new(0, 100, 0, 40)
+HuntButton.Position = UDim2.new(0.5, -50, 0, 90)
+HuntButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+HuntButton.Text = _G.huntMode == 1 and "Hunt Mode: On" or "Hunt Mode: Off"
+HuntButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+HuntButton.Font = Enum.Font.Gotham
+HuntButton.TextSize = 14
+HuntButton.Parent = MainFrame
+
+local HuntCorner = Instance.new("UICorner")
+HuntCorner.CornerRadius = UDim.new(0, 10)
+HuntCorner.Parent = HuntButton
+
+HuntButton.MouseButton1Click:Connect(function()
+    _G.huntMode = (_G.huntMode == 1) and 0 or 1
+    HuntButton.Text = _G.huntMode == 1 and "Hunt Mode: On" or "Hunt Mode: Off"
+    HuntButton.BackgroundColor3 = _G.huntMode == 1 and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(50, 50, 50)
+    game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+        Text = "Hunt Mode " .. (_G.huntMode == 1 and "Enabled" or "Disabled"),
+        Color = Color3.fromRGB(255, 255, 0),
+        Font = Enum.Font.SourceSansBold,
+        TextSize = 18
+    })
+    -- When Hunt Mode is turned on, immediately switch to the nearest target
+    if _G.huntMode == 1 then
+        autoTarget()
+    end
+end)
+
+-- Close Button
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 25, 0, 25)
+CloseButton.Position = UDim2.new(1, -30, 0, 5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.TextSize = 14
+CloseButton.Parent = MainFrame
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(1, 0) -- Circular close button
+CloseCorner.Parent = CloseButton
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Define a function to initialize bot logic
+local function initBotLogic()
+    -- Create BodyGyro and start bot logic after a short delay
+    delay(5, function()
+        local bg = Instance.new("BodyGyro", game.ReplicatedStorage)
+        bg.D = 1
+        bg.P = 30000
+        bg.MaxTorque = Vector3.new(400000000, 400000000, 400000000)
+
+        local strafeCounter = 0
+        local strafeDirection = STRAFE_OFFSET
+
+        RunService.RenderStepped:Connect(function()
+            -- If no valid character, wait for respawn and disable bot movement
+            if not player.Character or not player.Character:FindFirstChild("Humanoid") or player.Character.Humanoid.Health <= 0 then
+                bg.Parent = game.ReplicatedStorage
+                return
+            end
+
+            local playerRoot = player.Character:FindFirstChild("HumanoidRootPart")
+            if not playerRoot then return end
+
+            if _G.y == 1 and _G.x and _G.x:FindFirstChild("HumanoidRootPart") and _G.x.Humanoid.Health > 0 then
+                bg.Parent = playerRoot
+                local targetRoot = _G.x.HumanoidRootPart
+
+                local torso = playerRoot.CFrame.p + playerRoot.CFrame.LookVector + playerRoot.CFrame.RightVector
+                local torso2 = targetRoot.Position + targetRoot.Velocity/10
+                bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.Y, 0), torso2 - Vector3.new(0, torso2.Y, 0))
+
+                local optimalPos = getOptimalAttackPosition(_G.x)
+                _G.pos = optimalPos + playerRoot.CFrame.RightVector * STRAFE_OFFSET
+
+                if targetRoot.Velocity.Magnitude > 5 then
+                    if isHoldingGearInRightHand(_G.x) then
+                        _G.pos = optimalPos + targetRoot.CFrame.RightVector * -3 + targetRoot.CFrame.LookVector * -2 - targetRoot.Velocity/2.5
+                    else
+                        _G.pos = targetRoot.Position + targetRoot.CFrame.RightVector * -2 + targetRoot.CFrame.LookVector * -1 - targetRoot.Velocity/3
+                    end
+                end
+
+                local distanceToTarget = (targetRoot.Position - playerRoot.Position).Magnitude
+                local isClose = distanceToTarget <= 10
+                if isClose then
+                    _G.pos = targetRoot.Position + targetRoot.CFrame.RightVector * -3 + targetRoot.CFrame.LookVector * -1 + playerRoot.CFrame.RightVector * strafeDirection
+                    strafeCounter = strafeCounter + 1
+                    if strafeCounter >= STRAFE_SWITCH_FRAMES then
+                        strafeDirection = -strafeDirection
+                        strafeCounter = 0
+                    end
+                end
+
+                local avoidancePos = targetRoot.Position
+                if isHoldingGearInRightHand(_G.x) then
+                    local tool = _G.x:FindFirstChildOfClass("Tool")
+                    if tool and tool:FindFirstChild("Handle") then
+                        avoidancePos = tool.Handle.Position
+                    elseif _G.x:FindFirstChild("Right Arm") then
+                        avoidancePos = _G.x["Right Arm"].Position
+                    end
+                elseif _G.x:FindFirstChild("Right Arm") then
+                    avoidancePos = _G.x["Right Arm"].Position
+                end
+
+                local safeDistance = isHoldingGearInRightHand(_G.x) and AVOIDANCE_DISTANCE_GEAR or AVOIDANCE_DISTANCE_NO_GEAR
+                if isEnemyAttacking(_G.x) then
+                    safeDistance = safeDistance + 3
+                end
+
+                local vectorToAvoid = avoidancePos - _G.pos
+                local distanceToAvoid = vectorToAvoid.Magnitude
+                if distanceToAvoid < safeDistance then
+                    local directionAway = (_G.pos - avoidancePos).Unit
+                    _G.pos = _G.pos + directionAway * (safeDistance - distanceToAvoid)
+                end
+
+                local vectorToPlayer = (playerRoot.Position - targetRoot.Position).Unit
+                local enemyLookVector = targetRoot.CFrame.LookVector
+                if enemyLookVector:Dot(vectorToPlayer) > 0.8 and isEnemyAttacking(_G.x) then
+                    local dodgeDirection = (-targetRoot.CFrame.LookVector + -targetRoot.CFrame.RightVector).Unit
+                    _G.pos = _G.pos + dodgeDirection * DODGE_DISTANCE
+                end
+
+                if targetRoot.Position.Y - 0.5 > playerRoot.Position.Y then
+                    delay(0, function()
+                        player.Character.Humanoid.Jump = true 
+                    end)
+                end
+
+                if distanceToTarget <= ATTACK_DISTANCE then
+                    local tool = player.Character:FindFirstChildOfClass("Tool")
+                    if tool then 
+                        tool:Activate() 
+                    end
+                end
+
+                -- Smoothly interpolate to the target position
+                local newPos = playerRoot.Position:Lerp(_G.pos, 0.15)
+                player.Character.Humanoid:MoveTo(newPos)
+            else
+                bg.Parent = game.ReplicatedStorage
+                _G.x = nil
+            end
+        end)
+    end)
+end
+
+-- Disable bot when player dies by setting _G.y to 0
+local function onPlayerDied()
+    _G.y = 0
+    ToggleButton.Text = "Enable"
+    ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    print("Player died. Bot disabled.")
+end
+
+-- Connect the Died event when character spawns
+player.CharacterAdded:Connect(function(char)
+    char:WaitForChild("Humanoid", 5)
+    char.Humanoid.Died:Connect(onPlayerDied)
+    char:WaitForChild("HumanoidRootPart", 5)
+    print("New character spawned, reinitializing bot logic.")
+    initBotLogic()
+end)
+
+-- Input handling
+UserInputService.InputBegan:Connect(function(key)
+    if key.KeyCode == Enum.KeyCode.R then
+        _G.y = (_G.y == 1) and 0 or 1
+        ToggleButton.Text = _G.y == 1 and "Disable" or "Enable"
+        ToggleButton.BackgroundColor3 = _G.y == 1 and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(50, 50, 50)
+        print(_G.y == 1 and "Bot Enabled" or "Bot Disabled")
+        game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+            Text = "y = " .. _G.y,
+            Color = Color3.fromRGB(255, 255, 0),
+            Font = Enum.Font.SourceSansBold,
+            TextSize = 18
+        })
+    elseif key.KeyCode == Enum.KeyCode.T then
+        _G.rage = (_G.rage == 0) and 1 or 0
+        game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+            Text = "_G.rage = " .. _G.rage,
+            Color = Color3.fromRGB(255, 255, 0),
+            Font = Enum.Font.SourceSansBold,
+            TextSize = 18
+        })
+    end
+end)
+
+-- Heartbeat for auto-targeting
+RunService.Heartbeat:Connect(function()
+    if _G.y == 1 and _G.rage == 0 then
+        autoTarget()
+    end
+end)
+
+-- Initial bot logic start
+if player.Character then
+    initBotLogic()
+end
+
+-- Rage mode
+spawn(function()
+    while true do
+        wait(0)
+        if _G.rage == 1 and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local point1 = player.Character.HumanoidRootPart.Position + Vector3.new(-40, -40, -40)
+            local point2 = player.Character.HumanoidRootPart.Position + Vector3.new(40, 40, 40)
+            local region = Region3.new(point1, point2)
+            local parts = workspace:FindPartsInRegion3(region, player.Character, math.huge)
+            for _, v in pairs(parts) do
+                if v.Parent:FindFirstChild("Humanoid") and v.Parent.Humanoid.Health > 0 then
+                    print(v.Name)
+                    _G.x = v.Parent
+                    wait(0.5)
+                    break
+                end
+            end
+        end
+    end
+end)
