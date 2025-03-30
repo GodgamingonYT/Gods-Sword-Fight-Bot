@@ -5,23 +5,16 @@ local ATTACK_DISTANCE = 20           -- Distance to activate tool
 local DODGE_DISTANCE = 4             -- Distance to dodge when enemy attacks
 local STRAFE_OFFSET = 3              -- Strafing distance when close
 local STRAFE_SWITCH_FRAMES = 30      -- Frames before switching strafe direction
+local SPIN_SPEED = 3.5                 -- Multiplier for spin (increase to spin faster)
 
--- Global variables
-_G.x = nil  -- Target
-_G.e = nil
-_G.rage = 0
-_G.y = 0    -- Combat mode toggle
-_G.pos = nil
-_G.huntMode = 0 -- Hunt mode toggle
-
--- Services and player
+-- All local variables and services are declared up front
 local player = game.Players.LocalPlayer
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
--- Local functions
+-- Local helper functions
 local function generateRandomName()
     local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     local name = ""
@@ -44,7 +37,6 @@ local function findClosestHumanoidRootPart()
 
     for _, part in pairs(workspace:GetDescendants()) do
         if part:IsA("BasePart") and part.Name == "HumanoidRootPart" and part.Parent ~= player.Character then
-            -- When hunt mode is on, only consider characters tied to players
             if _G.huntMode == 1 then
                 local plr = game.Players:GetPlayerFromCharacter(part.Parent)
                 if not plr then
@@ -131,13 +123,13 @@ local function getOptimalAttackPosition(target)
     end
 end
 
--- Grip configurations
-local Grips = {
-    Up = CFrame.new(0, 0, -1.70000005, 0, 0, 1, 1, 0, 0, 0, 1, 0),
-    Out = CFrame.new(0, 0, -1.70000005, 0, 1, 0, 1, 0, 0, 0, 0, -1)
-}
-
-print("h:loaded (  :")
+-- Global variables (used to store state)
+_G.x = nil        -- Target
+_G.e = nil
+_G.rage = 0
+_G.y = 0          -- Combat mode toggle
+_G.pos = nil
+_G.huntMode = 0   -- Hunt mode toggle
 
 -- UI Setup
 local ScreenGui = Instance.new("ScreenGui")
@@ -168,12 +160,10 @@ Title.TextSize = 16
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = MainFrame
 
--- Dragging Logic (using UIDragDetector)
 MainFrame.Active = true
 local dragDetector = Instance.new("UIDragDetector")
 dragDetector.Parent = MainFrame
 
--- Toggle Button (moved up for a better look)
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Size = UDim2.new(0, 100, 0, 40)
 ToggleButton.Position = UDim2.new(0.5, -50, 0, 30)
@@ -193,14 +183,13 @@ ToggleButton.MouseButton1Click:Connect(function()
     ToggleButton.Text = _G.y == 1 and "Disable" or "Enable"
     ToggleButton.BackgroundColor3 = _G.y == 1 and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(50, 50, 50)
     game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-        Text = "Sword fight bot " .. (_G.y == 1 and "Enabled" or "Disabled"),
+        Text = "Bot " .. (_G.y == 1 and "Enabled" or "Disabled"),
         Color = Color3.fromRGB(255, 255, 0),
         Font = Enum.Font.SourceSansBold,
         TextSize = 18
     })
 end)
 
--- Hunt Mode Button (moved further down)
 local HuntButton = Instance.new("TextButton")
 HuntButton.Size = UDim2.new(0, 100, 0, 40)
 HuntButton.Position = UDim2.new(0.5, -50, 0, 90)
@@ -225,13 +214,11 @@ HuntButton.MouseButton1Click:Connect(function()
         Font = Enum.Font.SourceSansBold,
         TextSize = 18
     })
-    -- When Hunt Mode is turned on, immediately switch to the nearest target
-    if _G.huntMode == 1 then
+    if _G.huntMode == 1 and not _G.x then
         autoTarget()
     end
 end)
 
--- Close Button
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0, 25, 0, 25)
 CloseButton.Position = UDim2.new(1, -30, 0, 5)
@@ -243,16 +230,14 @@ CloseButton.TextSize = 14
 CloseButton.Parent = MainFrame
 
 local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(1, 0) -- Circular close button
+CloseCorner.CornerRadius = UDim.new(1, 0)
 CloseCorner.Parent = CloseButton
 
 CloseButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- Define a function to initialize bot logic
 local function initBotLogic()
-    -- Create BodyGyro and start bot logic after a short delay
     delay(5, function()
         local bg = Instance.new("BodyGyro", game.ReplicatedStorage)
         bg.D = 1
@@ -263,7 +248,6 @@ local function initBotLogic()
         local strafeDirection = STRAFE_OFFSET
 
         RunService.RenderStepped:Connect(function()
-            -- If no valid character, wait for respawn and disable bot movement
             if not player.Character or not player.Character:FindFirstChild("Humanoid") or player.Character.Humanoid.Health <= 0 then
                 bg.Parent = game.ReplicatedStorage
                 return
@@ -277,7 +261,7 @@ local function initBotLogic()
                 local targetRoot = _G.x.HumanoidRootPart
 
                 local torso = playerRoot.CFrame.p + playerRoot.CFrame.LookVector + playerRoot.CFrame.RightVector
-                local torso2 = targetRoot.Position + targetRoot.Velocity/10
+                local torso2 = targetRoot.Position + targetRoot.Velocity / 10
                 bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.Y, 0), torso2 - Vector3.new(0, torso2.Y, 0))
 
                 local optimalPos = getOptimalAttackPosition(_G.x)
@@ -285,9 +269,9 @@ local function initBotLogic()
 
                 if targetRoot.Velocity.Magnitude > 5 then
                     if isHoldingGearInRightHand(_G.x) then
-                        _G.pos = optimalPos + targetRoot.CFrame.RightVector * -3 + targetRoot.CFrame.LookVector * -2 - targetRoot.Velocity/2.5
+                        _G.pos = optimalPos + targetRoot.CFrame.RightVector * -3 + targetRoot.CFrame.LookVector * -2 - targetRoot.Velocity / 2.5
                     else
-                        _G.pos = targetRoot.Position + targetRoot.CFrame.RightVector * -2 + targetRoot.CFrame.LookVector * -1 - targetRoot.Velocity/3
+                        _G.pos = targetRoot.Position + targetRoot.CFrame.RightVector * -2 + targetRoot.CFrame.LookVector * -1 - targetRoot.Velocity / 3
                     end
                 end
 
@@ -346,6 +330,10 @@ local function initBotLogic()
                     end
                 end
 
+                -- Spin/oscillation speed is controlled by SPIN_SPEED.
+                local oscillation = math.sin(tick() * SPIN_SPEED) * math.rad(30)
+                -- If desired, you can adjust the math.rad(30) part to change the amplitude.
+                
                 -- Smoothly interpolate to the target position
                 local newPos = playerRoot.Position:Lerp(_G.pos, 0.15)
                 player.Character.Humanoid:MoveTo(newPos)
@@ -357,7 +345,6 @@ local function initBotLogic()
     end)
 end
 
--- Disable bot when player dies by setting _G.y to 0
 local function onPlayerDied()
     _G.y = 0
     ToggleButton.Text = "Enable"
@@ -365,7 +352,6 @@ local function onPlayerDied()
     print("Player died. Bot disabled.")
 end
 
--- Connect the Died event when character spawns
 player.CharacterAdded:Connect(function(char)
     char:WaitForChild("Humanoid", 5)
     char.Humanoid.Died:Connect(onPlayerDied)
@@ -374,7 +360,6 @@ player.CharacterAdded:Connect(function(char)
     initBotLogic()
 end)
 
--- Input handling
 UserInputService.InputBegan:Connect(function(key)
     if key.KeyCode == Enum.KeyCode.R then
         _G.y = (_G.y == 1) and 0 or 1
@@ -398,19 +383,16 @@ UserInputService.InputBegan:Connect(function(key)
     end
 end)
 
--- Heartbeat for auto-targeting
 RunService.Heartbeat:Connect(function()
     if _G.y == 1 and _G.rage == 0 then
         autoTarget()
     end
 end)
 
--- Initial bot logic start
 if player.Character then
     initBotLogic()
 end
 
--- Rage mode
 spawn(function()
     while true do
         wait(0)
