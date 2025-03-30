@@ -3,9 +3,9 @@ local AVOIDANCE_DISTANCE_GEAR = 7    -- Safe distance when enemy has gear
 local AVOIDANCE_DISTANCE_NO_GEAR = 5 -- Safe distance when no gear
 local ATTACK_DISTANCE = 20           -- Distance to activate tool
 local DODGE_DISTANCE = 4             -- Distance to dodge when enemy attacks
-local STRAFE_OFFSET = 3              -- Strafing distance when close
+local STRAFE_OFFSET = 3.5              -- Strafing distance when close
 local STRAFE_SWITCH_FRAMES = 30      -- Frames before switching strafe direction
-local SPIN_SPEED = 4                 -- Multiplier for spin (increase to spin faster)
+local SPIN_SPEED = 3.5                 -- Multiplier for spin (increase to spin faster)
 
 -- All local variables and services are declared up front
 local player = game.Players.LocalPlayer
