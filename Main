@@ -26,8 +26,8 @@ ScreenGui.Parent = CoreGui
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = generateRandomName()
-MainFrame.Size = UDim2.new(0, 200, 0, 180)
-MainFrame.Position = UDim2.new(0.5, -100, 0.5, -90)
+MainFrame.Size = UDim2.new(0, 160, 0, 232)
+MainFrame.Position = UDim2.new(0.5, -80, 0.5, -116)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
@@ -39,7 +39,7 @@ UICorner.Parent = MainFrame
 
 local TitleBar = Instance.new("Frame")
 TitleBar.Name = generateRandomName()
-TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.Size = UDim2.new(1, 0, 0, 24)
 TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 TitleBar.BorderSizePixel = 0
 TitleBar.Parent = MainFrame
@@ -55,18 +55,18 @@ Title.Size = UDim2.new(0.7, 0, 1, 0)
 Title.BackgroundTransparency = 1
 Title.Text = "Sword Bot"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 16
+Title.TextSize = 14
 Title.Font = Enum.Font.GothamBold
 Title.Parent = TitleBar
 
 local MinimizeButton = Instance.new("TextButton")
 MinimizeButton.Name = generateRandomName()
-MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
-MinimizeButton.Position = UDim2.new(1, -60, 0, 0)
+MinimizeButton.Size = UDim2.new(0, 24, 0, 24)
+MinimizeButton.Position = UDim2.new(1, -48, 0, 0)
 MinimizeButton.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
 MinimizeButton.Text = "−"
 MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-MinimizeButton.TextSize = 20
+MinimizeButton.TextSize = 16
 MinimizeButton.Font = Enum.Font.GothamBold
 MinimizeButton.Parent = TitleBar
 
@@ -77,24 +77,24 @@ MinimizeCorner.Parent = MinimizeButton
 
 local CloseButton = Instance.new("TextButton")
 CloseButton.Name = generateRandomName()
-CloseButton.Size = UDim2.new(0, 30, 0, 30)
-CloseButton.Position = UDim2.new(1, -30, 0, 0)
+CloseButton.Size = UDim2.new(0, 24, 0, 24)
+CloseButton.Position = UDim2.new(1, -24, 0, 0)
 CloseButton.BackgroundColor3 = Color3.fromRGB(140, 50, 50)
 CloseButton.Text = "X"
 CloseButton.TextColor3 = Color3.fromRGB(255, 220, 220)
-CloseButton.TextSize = 20
+CloseButton.TextSize = 16
 CloseButton.Font = Enum.Font.GothamBold
 CloseButton.Parent = TitleBar
 
-local ClearCorner = Instance.new("UICorner")
-ClearCorner.Name = generateRandomName()
-ClearCorner.CornerRadius = UDim.new(0, 10)
-ClearCorner.Parent = CloseButton
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.Name = generateRandomName()
+CloseCorner.CornerRadius = UDim.new(0, 10)
+CloseCorner.Parent = CloseButton
 
 local ContentFrame = Instance.new("Frame")
 ContentFrame.Name = generateRandomName()
-ContentFrame.Size = UDim2.new(1, 0, 1, -30)
-ContentFrame.Position = UDim2.new(0, 0, 0, 30)
+ContentFrame.Size = UDim2.new(1, 0, 1, -24)
+ContentFrame.Position = UDim2.new(0, 0, 0, 24)
 ContentFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
 ContentFrame.BorderSizePixel = 0
 ContentFrame.Parent = MainFrame
@@ -106,12 +106,12 @@ ContentCorner.Parent = ContentFrame
 
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Name = generateRandomName()
-ToggleButton.Size = UDim2.new(0, 120, 0, 40)
-ToggleButton.Position = UDim2.new(0.5, -60, 0, 20)
+ToggleButton.Size = UDim2.new(0, 96, 0, 32)
+ToggleButton.Position = UDim2.new(0.5, -48, 0, 16)
 ToggleButton.BackgroundColor3 = Color3.fromRGB(140, 50, 50)
 ToggleButton.Text = "Bot: OFF"
-ToggleButton.TextColor3 = Color3.fromRGB(220, 255, 220)
-ToggleButton.TextSize = 14
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 12
 ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.Parent = ContentFrame
 
@@ -122,12 +122,12 @@ ToggleCorner.Parent = ToggleButton
 
 local HuntButton = Instance.new("TextButton")
 HuntButton.Name = generateRandomName()
-HuntButton.Size = UDim2.new(0, 120, 0, 40)
-HuntButton.Position = UDim2.new(0.5, -60, 0, 70)
+HuntButton.Size = UDim2.new(0, 96, 0, 32)
+HuntButton.Position = UDim2.new(0.5, -48, 0, 56)
 HuntButton.BackgroundColor3 = Color3.fromRGB(140, 50, 50)
 HuntButton.Text = "Hunt: OFF"
-HuntButton.TextColor3 = Color3.fromRGB(220, 255, 220)
-HuntButton.TextSize = 14
+HuntButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+HuntButton.TextSize = 12
 HuntButton.Font = Enum.Font.GothamBold
 HuntButton.Parent = ContentFrame
 
@@ -136,20 +136,48 @@ HuntCorner.Name = generateRandomName()
 HuntCorner.CornerRadius = UDim.new(0, 10)
 HuntCorner.Parent = HuntButton
 
+local ReachButton = Instance.new("TextButton")
+ReachButton.Name = generateRandomName()
+ReachButton.Size = UDim2.new(0, 96, 0, 32)
+ReachButton.Position = UDim2.new(0.5, -48, 0, 96)
+ReachButton.BackgroundColor3 = Color3.fromRGB(140, 50, 50)
+ReachButton.Text = "Reach: OFF"
+ReachButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ReachButton.TextSize = 12
+ReachButton.Font = Enum.Font.GothamBold
+ReachButton.Parent = ContentFrame
+
+local ReachCorner = Instance.new("UICorner")
+ReachCorner.Name = generateRandomName()
+ReachCorner.CornerRadius = UDim.new(0, 10)
+ReachCorner.Parent = ReachButton
+
+local TargetLabel = Instance.new("TextLabel")
+TargetLabel.Name = generateRandomName()
+TargetLabel.Size = UDim2.new(0, 96, 0, 40)
+TargetLabel.Position = UDim2.new(0.5, -48, 0, 136)
+TargetLabel.BackgroundTransparency = 1
+TargetLabel.Text = "Target:\nNone"
+TargetLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TargetLabel.TextSize = 12
+TargetLabel.Font = Enum.Font.GothamBold
+TargetLabel.TextWrapped = true
+TargetLabel.Parent = ContentFrame
+
 -- UI Functionality
 local minimized = false
 local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
 
 MinimizeButton.MouseButton1Click:Connect(function()
     if minimized then
-        local tween = TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, 200, 0, 180)})
+        local tween = TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, 160, 0, 232)})
         tween:Play()
         tween.Completed:Wait()
         MinimizeButton.Text = "−"
         ContentFrame.Visible = true
         minimized = false
     else
-        local tween = TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, 200, 0, 30)})
+        local tween = TweenService:Create(MainFrame, tweenInfo, {Size = UDim2.new(0, 160, 0, 24)})
         ContentFrame.Visible = false
         tween:Play()
         tween.Completed:Wait()
@@ -160,7 +188,7 @@ end)
 
 CloseButton.MouseButton1Click:Connect(function()
     local tween = TweenService:Create(MainFrame, tweenInfo, {
-        Size = UDim2.new(0, 200, 0, 0),
+        Size = UDim2.new(0, 160, 0, 0),
         BackgroundTransparency = 1
     })
     tween:Play()
@@ -177,6 +205,19 @@ CloseButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
     if _G.e then
         _G.e:Disconnect()
+    end
+    if _G.targetHighlight then
+        _G.targetHighlight:Destroy()
+        _G.targetHighlight = nil
+    end
+    if getgenv().configs and getgenv().configs.connections then
+        local Disable = getgenv().configs.Disable
+        for _, v in ipairs(getgenv().configs.connections) do
+            v:Disconnect()
+        end
+        Disable:Fire()
+        Disable:Destroy()
+        table.clear(getgenv().configs)
     end
 end)
 
@@ -209,100 +250,207 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 -- Sword Bot Script
-_G.x = nil -- target, dont change
+_G.x = nil -- target
 _G.huntMode = false -- Hunt mode state
-print("h:loaded (  :")
+_G.reachMode = false -- Reach mode state
+_G.targetHighlight = nil -- Highlight for target
 Grips = {
     Up = CFrame.new(0, 0, -1.70000005, 0, 0, 1, 1, 0, 0, 0, 1, 0),
     Out = CFrame.new(0, 0, -1.70000005, 0, 1, 0, 1, -0, 0, 0, 0, -1)
 }
 
 _G.e = nil
-_G.y = 0 -- Initialize bot as off
+_G.y = 0 -- Bot mode off
 local h3 = 0
 local h4 = false
-local h = 3
+local h = 4 -- Toned-down strafing
 local h2 = 0
 _G.g = nil
 _G.pos = nil
 local jo = 0
 local jo2 = 1
-hhh = false
+local hhh = false
 local jo3 = 0
 
--- Toggle Button Logic
+-- Reach Script Setup
+local connections = getgenv().configs and getgenv().configs.connections
+if connections then
+    local Disable = getgenv().configs.Disable
+    for _, v in ipairs(connections) do
+        v:Disconnect()
+    end
+    Disable:Fire()
+    Disable:Destroy()
+    table.clear(getgenv().configs)
+end
+
+local Disable = Instance.new("BindableEvent")
+getgenv().configs = {
+    connections = {},
+    Disable = Disable,
+    Size = Vector3.new(7, 7, 7),
+    DeathCheck = true
+}
+
+local Ignorelist = OverlapParams.new()
+Ignorelist.FilterType = Enum.RaycastFilterType.Include
+
+local function getchar(plr)
+    local plr = plr or player
+    return plr.Character
+end
+
+local function gethumanoid(plr)
+    local char = plr:IsA("Model") and plr or getchar(plr)
+    if char then
+        return char:FindFirstChildWhichIsA("Humanoid")
+    end
+end
+
+local function IsAlive(Humanoid)
+    return Humanoid and Humanoid.Health > 0
+end
+
+local function GetTouchInterest(Tool)
+    return Tool and Tool:FindFirstChildWhichIsA("TouchTransmitter", true)
+end
+
+local function GetCharacters(LocalPlayerChar)
+    local Characters = {}
+    for _, v in ipairs(Players:GetPlayers()) do
+        table.insert(Characters, getchar(v))
+    end
+    table.remove(Characters, table.find(Characters, LocalPlayerChar))
+    return Characters
+end
+
+local function Attack(Tool, TouchPart, ToTouch)
+    if Tool:IsDescendantOf(Workspace) then
+        Tool:Activate()
+        firetouchinterest(TouchPart, ToTouch, 1)
+        firetouchinterest(TouchPart, ToTouch, 0)
+    end
+end
+
+table.insert(getgenv().configs.connections, Disable.Event:Connect(function()
+    _G.reachMode = false
+    ReachButton.Text = "Reach: OFF"
+    ReachButton.BackgroundColor3 = Color3.fromRGB(140, 50, 50)
+end))
+
+-- Reach Loop (runs regardless of _G.y)
+table.insert(getgenv().configs.connections, RunService.Heartbeat:Connect(function()
+    if _G.reachMode then
+        local char = getchar()
+        if IsAlive(gethumanoid(char)) then
+            local Tool = char and char:FindFirstChildWhichIsA("Tool")
+            local TouchInterest = Tool and GetTouchInterest(Tool)
+            if TouchInterest then
+                local TouchPart = TouchInterest.Parent
+                local Characters = GetCharacters(char)
+                Ignorelist.FilterDescendantsInstances = Characters
+                local InstancesInBox = Workspace:GetPartBoundsInBox(TouchPart.CFrame, TouchPart.Size + getgenv().configs.Size, Ignorelist)
+                for _, v in ipairs(InstancesInBox) do
+                    local Character = v:FindFirstAncestorWhichIsA("Model")
+                    if table.find(Characters, Character) then
+                        if getgenv().configs.DeathCheck then
+                            if IsAlive(gethumanoid(Character)) then
+                                Attack(Tool, TouchPart, v)
+                            end
+                        else
+                            Attack(Tool, TouchPart, v)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end))
+
+-- Toggle Bot Mode Logic
 local function toggleBot()
     if _G.y == 1 then
         _G.y = 0
         ToggleButton.Text = "Bot: OFF"
         ToggleButton.BackgroundColor3 = Color3.fromRGB(140, 50, 50)
-        print("Off y")
-        game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-            Text = "y = " .. _G.y,
-            Color = Color3.fromRGB(255, 255, 0),
-            Font = Enum.Font.SourceSansBold,
-            TextSize = 18
-        })
+        _G.x = nil -- Clear target
+        if _G.targetHighlight then
+            _G.targetHighlight:Destroy()
+            _G.targetHighlight = nil
+        end
+        TargetLabel.Text = "Target:\nNone"
     else
         _G.y = 1
         ToggleButton.Text = "Bot: ON"
         ToggleButton.BackgroundColor3 = Color3.fromRGB(70, 130, 70)
-        print("On y")
-        game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-            Text = "y = " .. _G.y,
-            Color = Color3.fromRGB(255, 255, 0),
-            Font = Enum.Font.SourceSansBold,
-            TextSize = 18
-        })
     end
 end
 
 ToggleButton.MouseButton1Click:Connect(toggleBot)
 
--- Hunt Button Logic
+-- Hunt Mode Logic
 local function toggleHunt()
     if _G.huntMode then
         _G.huntMode = false
+        _G.x = nil -- Reset target
+        if _G.targetHighlight then
+            _G.targetHighlight:Destroy()
+            _G.targetHighlight = nil
+        end
         HuntButton.Text = "Hunt: OFF"
         HuntButton.BackgroundColor3 = Color3.fromRGB(140, 50, 50)
-        print("Hunt mode off")
-        game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-            Text = "Hunt Mode: OFF",
-            Color = Color3.fromRGB(255, 255, 0),
-            Font = Enum.Font.SourceSansBold,
-            TextSize = 18
-        })
+        TargetLabel.Text = "Target:\nNone"
     else
         _G.huntMode = true
         HuntButton.Text = "Hunt: ON"
         HuntButton.BackgroundColor3 = Color3.fromRGB(70, 130, 70)
-        -- Lock onto current nearest target
+        -- Immediately attempt to lock onto the nearest player if available.
         local closestRootPart = findClosestHumanoidRootPart()
         if closestRootPart then
             _G.x = closestRootPart
-            print("Locked onto: " .. _G.x.Name)
-            game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-                Text = "Hunt Mode: ON, Locked onto: " .. _G.x.Name,
-                Color = Color3.fromRGB(0, 255, 255),
-                Font = Enum.Font.SourceSansBold,
-                TextSize = 18
-            })
+            TargetLabel.Text = "Target:\n" .. _G.x.Name
+            if _G.targetHighlight then
+                _G.targetHighlight:Destroy()
+            end
+            _G.targetHighlight = Instance.new("Highlight")
+            _G.targetHighlight.Name = generateRandomName()
+            _G.targetHighlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+            _G.targetHighlight.FillTransparency = 1
+            _G.targetHighlight.Adornee = _G.x
+            _G.targetHighlight.Parent = _G.x
         else
             _G.huntMode = false
             HuntButton.Text = "Hunt: OFF"
             HuntButton.BackgroundColor3 = Color3.fromRGB(140, 50, 50)
-            print("No target found, Hunt mode off")
-            game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-                Text = "No target found, Hunt Mode: OFF",
-                Color = Color3.fromRGB(255, 0, 0),
-                Font = Enum.Font.SourceSansBold,
-                TextSize = 18
-            })
+            TargetLabel.Text = "Target:\nNone"
         end
     end
 end
 
 HuntButton.MouseButton1Click:Connect(toggleHunt)
+
+-- Reach Mode Logic
+local function toggleReach()
+    if _G.reachMode then
+        _G.reachMode = false
+        ReachButton.Text = "Reach: OFF"
+        ReachButton.BackgroundColor3 = Color3.fromRGB(140, 50, 50)
+        if getgenv().configs and getgenv().configs.connections then
+            local Disable = getgenv().configs.Disable
+            for _, v in ipairs(getgenv().configs.connections) do
+                v:Disconnect()
+            end
+            Disable:Fire()
+            table.clear(getgenv().configs.connections)
+        end
+    else
+        _G.reachMode = true
+        ReachButton.Text = "Reach: ON"
+        ReachButton.BackgroundColor3 = Color3.fromRGB(70, 130, 70)
+    end
+end
+
+ReachButton.MouseButton1Click:Connect(toggleReach)
 
 -- Keybinds
 UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
@@ -311,17 +459,17 @@ UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
         toggleBot()
     elseif input.KeyCode == Enum.KeyCode.H then
         toggleHunt()
+    elseif input.KeyCode == Enum.KeyCode.T then
+        toggleReach()
     end
 end)
 
--- Modified find closest function
+-- Modified findClosestHumanoidRootPart function remains unchanged.
 local function findClosestHumanoidRootPart()
     local closestRootPart = nil
     local closestDistance = math.huge
     local localPlayerPosition = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart.Position
-
     if not localPlayerPosition then return nil end
-
     for _, part in pairs(Workspace:GetDescendants()) do
         if part:IsA("BasePart") and part.Name == "HumanoidRootPart" and part.Parent ~= player.Character then
             local humanoid = part.Parent:FindFirstChild("Humanoid")
@@ -337,90 +485,95 @@ local function findClosestHumanoidRootPart()
     return closestRootPart
 end
 
--- Modified auto-target function
+-- AutoTarget logic:
+-- If hunt mode is enabled: 
+--   if there is no current target, assign one to the nearest player;
+--   if there is a target, check its health – if it is dead, turn off hunt mode.
+-- If bot mode is enabled (and hunt mode is off), update target continuously.
 local function autoTarget()
-    -- Check if current target is invalid
-    if _G.x and (_G.x:FindFirstChild("Humanoid") == nil or _G.x.Humanoid.Health <= 0) then
-        _G.x = nil
-        if _G.huntMode then
-            _G.huntMode = false
-            HuntButton.Text = "Hunt: OFF"
-            HuntButton.BackgroundColor3 = Color3.fromRGB(140, 50, 50)
-            print("Hunt target died, Hunt mode off")
-            game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-                Text = "Hunt target died, Hunt Mode: OFF",
-                Color = Color3.fromRGB(255, 0, 0),
-                Font = Enum.Font.SourceSansBold,
-                TextSize = 18
-            })
-        end
-    end
-
-    if not _G.huntMode or not _G.x then
-        local closestRootPart = findClosestHumanoidRootPart()
-        if closestRootPart then
-            if _G.x and _G.x:FindFirstChild("HumanoidRootPart") and _G.x.Humanoid.Health > 0 then
-                -- Compare distances only if not in Hunt Mode
-                if not _G.huntMode then
-                    local currentDist = (_G.x.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                    local closestDist = (closestRootPart.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).Magnitude
-                    if closestRootPart ~= _G.x and closestDist < currentDist then
-                        _G.x = closestRootPart
-                        print("Switched to closer target: " .. _G.x.Name)
-                        game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-                            Text = "Switched target to: " .. _G.x.Name,
-                            Color = Color3.fromRGB(0, 255, 255),
-                            Font = Enum.Font.SourceSansBold,
-                            TextSize = 18
-                        })
-                    end
+    if _G.huntMode then
+        if _G.x then
+            local humanoid = _G.x:FindFirstChild("Humanoid")
+            if not humanoid or humanoid.Health <= 0 then
+                if _G.targetHighlight then
+                    _G.targetHighlight:Destroy()
+                    _G.targetHighlight = nil
                 end
-            else
-                -- Set new target
-                _G.x = closestRootPart
-                if _G.x then
-                    print("Auto-targeting: " .. _G.x.Name)
-                    game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
-                        Text = "Auto-targeting: " .. _G.x.Name,
-                        Color = Color3.fromRGB(0, 255, 255),
-                        Font = Enum.Font.SourceSansBold,
-                        TextSize = 18
-                    })
-                end
+                _G.x = nil
+                _G.huntMode = false
+                HuntButton.Text = "Hunt: OFF"
+                HuntButton.BackgroundColor3 = Color3.fromRGB(140,50,50)
+                TargetLabel.Text = "Target:\nNone"
             end
         else
+            -- No target yet: immediately assign the nearest target
+            local closestRootPart = findClosestHumanoidRootPart()
+            if closestRootPart then
+                _G.x = closestRootPart
+                TargetLabel.Text = "Target:\n" .. _G.x.Name
+                if _G.targetHighlight then
+                    _G.targetHighlight:Destroy()
+                end
+                _G.targetHighlight = Instance.new("Highlight")
+                _G.targetHighlight.Name = generateRandomName()
+                _G.targetHighlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+                _G.targetHighlight.FillTransparency = 1
+                _G.targetHighlight.Adornee = _G.x
+                _G.targetHighlight.Parent = _G.x
+            end
+        end
+    elseif _G.y == 1 then -- Bot mode active.
+        local closestRootPart = findClosestHumanoidRootPart()
+        if closestRootPart then
+            _G.x = closestRootPart
+            TargetLabel.Text = "Target:\n" .. _G.x.Name
+            if _G.targetHighlight then
+                _G.targetHighlight:Destroy()
+            end
+            _G.targetHighlight = Instance.new("Highlight")
+            _G.targetHighlight.Name = generateRandomName()
+            _G.targetHighlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+            _G.targetHighlight.FillTransparency = 1
+            _G.targetHighlight.Adornee = _G.x
+            _G.targetHighlight.Parent = _G.x
+        else
             _G.x = nil
+            if _G.targetHighlight then
+                _G.targetHighlight:Destroy()
+                _G.targetHighlight = nil
+            end
+            TargetLabel.Text = "Target:\nNone"
         end
     end
 end
 
--- RunService for auto-targeting
+-- RunService Heartbeat triggers autoTarget as long as either hunt mode or bot mode is active.
 RunService.Heartbeat:Connect(function()
-    if _G.y == 1 then
+    if _G.huntMode or _G.y == 1 then
         autoTarget()
     end
 end)
 
--- Original script core
+-- Original script core for movement and behavior
 local numba = Instance.new("NumberValue", Workspace)
 numba.Value = -40
 delay(0, function()
     while true do
-        wait(0.14)
-        numba.Value = math.random(-90, -35)
-        game.TweenService:Create(numba, TweenInfo.new(0.07, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, 1, true, 0), { Value = math.random(35, 90) }):Play()
+        task.wait(0.14)
+        numba.Value = math.random(-120, -40) -- Toned-down turns
+        TweenService:Create(numba, TweenInfo.new(0.07, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, 1, true, 0), { Value = math.random(40, 120) }):Play()
     end
 end)
 
 delay(5, function()
-    bg = Instance.new("BodyGyro", ReplicatedStorage)
+    local bg = Instance.new("BodyGyro", ReplicatedStorage)
     bg.D = 1
-    bg.CFrame = CFrame.new(player.Character and player.Character.HumanoidRootPart and player.Character.HumanoidRootPart.CFrame.LookVector or Vector3.new(0, 0, 1))
+    bg.CFrame = CFrame.new((player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart.CFrame.LookVector) or Vector3.new(0, 0, 1))
     bg.P = 30000
     bg.MaxTorque = Vector3.new(400000000, 400000000, 400000000)
 
     RunService.RenderStepped:Connect(function()
-        if _G.x ~= nil and _G.x:FindFirstChild("HumanoidRootPart") and _G.y == 1 and player.Character and player.Character.Humanoid.Health > 0 then
+        if _G.x and _G.x:FindFirstChild("HumanoidRootPart") and _G.y == 1 and player.Character and player.Character.Humanoid.Health > 0 then
             if _G.x:FindFirstChild("Humanoid") and _G.x.Humanoid.Health > 0 then
                 bg.Parent = player.Character.HumanoidRootPart
                 local torso = player.Character.HumanoidRootPart.CFrame.p + player.Character.HumanoidRootPart.CFrame.LookVector * 1 + player.Character.HumanoidRootPart.CFrame.RightVector * 1
@@ -428,101 +581,96 @@ delay(5, function()
                 if h2 == 0 then
                     torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
                 elseif h2 == 1 then
-                    torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / 25)
+                    torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / 20)
                 end
-                -- Apply 25-degree leftward rotation
-                bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.y, 0), torso2 - Vector3.new(0, torso2.y, 0)) * CFrame.Angles(0, math.rad(25), 0)
-                _G.pos = _G.x["HumanoidRootPart"].Position + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * 0 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6
+                bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.y, 0), torso2 - Vector3.new(0, torso2.y, 0)) * CFrame.Angles(0, math.rad(20), 0)
+                _G.pos = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * 0 + player.Character.HumanoidRootPart.CFrame.RightVector * 6
 
                 if _G.x.HumanoidRootPart.Position.y - 0.5 > player.Character.HumanoidRootPart.Position.y then
                     delay(0, function() player.Character.Humanoid.Jump = true end)
                 end
                 if _G.x.HumanoidRootPart.Velocity.z >= player.Character.HumanoidRootPart.CFrame.LookVector.z or _G.x.HumanoidRootPart.Velocity.x >= player.Character.HumanoidRootPart.CFrame.LookVector.x then
-                    _G.pos = _G.x["HumanoidRootPart"].Position + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6 - _G.x.HumanoidRootPart.Velocity / 2
+                    _G.pos = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + player.Character.HumanoidRootPart.CFrame.RightVector * 6 - _G.x.HumanoidRootPart.Velocity / 2
                     local torso = player.Character.HumanoidRootPart.CFrame.p + player.Character.HumanoidRootPart.CFrame.LookVector * 1 + player.Character.HumanoidRootPart.CFrame.RightVector * 1
                     local torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
                     if h2 == 0 then
                         torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
                     elseif h2 == 1 then
-                        torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / 25)
+                        torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / 20)
                     end
-                    bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.y, 0), torso2 - Vector3.new(0, torso2.y, 0)) * CFrame.Angles(0, math.rad(25), 0)
-                    if (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= 10 then
-                        _G.pos = _G.x["HumanoidRootPart"].Position + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character["HumanoidRootPart"].CFrame.RightVector * 1 + player.Character["HumanoidRootPart"].CFrame.LookVector * -1) - _G.x.HumanoidRootPart.Velocity / 5 + player.Character.HumanoidRootPart.CFrame.RightVector * h
+                    bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.y, 0), torso2 - Vector3.new(0, torso2.y, 0)) * CFrame.Angles(0, math.rad(20), 0)
+                    if (_G.x.HumanoidRootPart.Position - player.Character.HumanoidRootPart.CFrame.p).Magnitude <= 10 then
+                        _G.pos = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character.HumanoidRootPart.CFrame.RightVector * 1 + player.Character.HumanoidRootPart.CFrame.LookVector * -1) - _G.x.HumanoidRootPart.Velocity / 5 + player.Character.HumanoidRootPart.CFrame.RightVector * h
                         jo = jo + 1
                         if jo == 3 then
                             h = h * -1
                         end
                     end
                 elseif _G.x.HumanoidRootPart.Velocity.z <= player.Character.HumanoidRootPart.CFrame.LookVector.z or _G.x.HumanoidRootPart.Velocity.x <= player.Character.HumanoidRootPart.CFrame.LookVector.x then
-                    _G.pos = _G.x["HumanoidRootPart"].Position + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6 + _G.x.HumanoidRootPart.Velocity / 10
+                    _G.pos = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + player.Character.HumanoidRootPart.CFrame.RightVector * 6 + _G.x.HumanoidRootPart.Velocity / 10
                     local torso = player.Character.HumanoidRootPart.CFrame.p + player.Character.HumanoidRootPart.CFrame.LookVector * 1 + player.Character.HumanoidRootPart.CFrame.RightVector * 1
                     local torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
                     if h2 == 0 then
                         torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
                     elseif h2 == 1 then
-                        torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / 25)
+                        torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / 20)
                     end
                     bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.y, 0), torso2 - Vector3.new(0, torso2.y, 0)) * CFrame.Angles(0, math.rad(20), 0)
-                    if (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= 10 then
-                        _G.pos = _G.x["HumanoidRootPart"].Position + _G.x["HumanoidRootPart"].CFrame.RightVector * 1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character["HumanoidRootPart"].CFrame.RightVector * 1 + player.Character["HumanoidRootPart"].CFrame.LookVector * -1) + _G.x.HumanoidRootPart.Velocity / 3 + player.Character.HumanoidRootPart.CFrame.RightVector * h
+                    if (_G.x.HumanoidRootPart.Position - player.Character.HumanoidRootPart.CFrame.p).Magnitude <= 10 then
+                        _G.pos = player.Character.HumanoidRootPart.CFrame.LookVector * 5 * jo2 + _G.x.HumanoidRootPart.CFrame.RightVector * 1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character.HumanoidRootPart.CFrame.RightVector * 1 + player.Character.HumanoidRootPart.CFrame.LookVector * -1) + _G.x.HumanoidRootPart.Velocity / 3 + player.Character.HumanoidRootPart.CFrame.RightVector * h
                         jo = jo + 1
                         if jo == 3 then
                             h = h * -1
                         end
                     end
                 end
-                if (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= 10 then
+                if (_G.x.HumanoidRootPart.Position - player.Character.HumanoidRootPart.CFrame.p).Magnitude <= 10 then
                     h2 = 1
                 else
                     h2 = 0
                 end
-                if (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= 20 then
-                    if (_G.x["HumanoidRootPart"].Position - player.Character["Right Arm"].CFrame.p).magnitude <= 5 or hhh == true then
+                if (_G.x.HumanoidRootPart.Position - player.Character.HumanoidRootPart.CFrame.p).Magnitude <= 15 then
+                    if (_G.x.HumanoidRootPart.Position - player.Character["Right Arm"].CFrame.p).Magnitude <= 5 or hhh == true then
                         hhh = true
-                        if (_G.x["HumanoidRootPart"].Position - player.Character["Right Arm"].CFrame.p).magnitude >= 7 then
+                        if (_G.x.HumanoidRootPart.Position - player.Character["Right Arm"].CFrame.p).Magnitude >= 7 then
                             hhh = false
                         end
-                        jo3 = jo3 + 1
-                        if jo3 >= math.random(2, 4) then
-                            jo3 = 0
-                            if jo2 == 0 then
-                                jo2 = -2
-                            else
-                                jo2 = 0
-                            end
+                        if jo2 == 0 then
+                            jo2 = -2
+                        else
+                            jo2 = 0
                         end
-                        _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.x.HumanoidRootPart.Velocity / 20
+                        _G.pos = player.Character.HumanoidRootPart.CFrame.LookVector * 5 * jo2 + _G.x.HumanoidRootPart.Velocity / 20
                         if _G.x.HumanoidRootPart.Velocity.z >= player.Character.HumanoidRootPart.CFrame.LookVector.z or _G.x.HumanoidRootPart.Velocity.x >= player.Character.HumanoidRootPart.CFrame.LookVector.x then
-                            _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6 - _G.x.HumanoidRootPart.Velocity / 2
+                            _G.pos = player.Character.HumanoidRootPart.CFrame.LookVector * 5 * jo2 + _G.x.HumanoidRootPart.CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + player.Character.HumanoidRootPart.CFrame.RightVector * 6 - _G.x.HumanoidRootPart.Velocity / 2
                             local torso = player.Character.HumanoidRootPart.CFrame.p + player.Character.HumanoidRootPart.CFrame.LookVector * 1 + player.Character.HumanoidRootPart.CFrame.RightVector * 1
                             local torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
                             if h2 == 0 then
                                 torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
                             elseif h2 == 1 then
-                                torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / 25)
+                                torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / 20)
                             end
                             bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.y, 0), torso2 - Vector3.new(0, torso2.y, 0)) * CFrame.Angles(0, math.rad(20), 0)
                             bg.D = 1
-                            if (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= 10 then
-                                _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character["HumanoidRootPart"].CFrame.RightVector * 1 + player.Character["HumanoidRootPart"].CFrame.LookVector * -1) - _G.x.HumanoidRootPart.Velocity / 5 + player.Character.HumanoidRootPart.CFrame.RightVector * h
+                            if (_G.x.HumanoidRootPart.Position - player.Character.HumanoidRootPart.CFrame.p).Magnitude <= 10 then
+                                _G.pos = player.Character.HumanoidRootPart.CFrame.LookVector * 5 * jo2 + _G.x.HumanoidRootPart.CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character.HumanoidRootPart.CFrame.RightVector * 1 + player.Character.HumanoidRootPart.CFrame.LookVector * -1) - _G.x.HumanoidRootPart.Velocity / 5 + player.Character.HumanoidRootPart.CFrame.RightVector * h
                                 jo = jo + 1
                                 if jo == 3 then
                                     h = h * -1
                                 end
                             end
                         elseif _G.x.HumanoidRootPart.Velocity.z <= player.Character.HumanoidRootPart.CFrame.LookVector.z or _G.x.HumanoidRootPart.Velocity.x <= player.Character.HumanoidRootPart.CFrame.LookVector.x then
-                            _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6 + _G.x.HumanoidRootPart.Velocity / 10
+                            _G.pos = player.Character.HumanoidRootPart.CFrame.LookVector * 5 * jo2 + _G.x.HumanoidRootPart.CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + player.Character.HumanoidRootPart.CFrame.RightVector * 6 + _G.x.HumanoidRootPart.Velocity / 10
                             local torso = player.Character.HumanoidRootPart.CFrame.p + player.Character.HumanoidRootPart.CFrame.LookVector * 1 + player.Character.HumanoidRootPart.CFrame.RightVector * 1
                             local torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
                             if h2 == 0 then
                                 torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
                             elseif h2 == 1 then
-                                torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / 25)
+                                torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / 20)
                             end
                             bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.y, 0), torso2 - Vector3.new(0, torso2.y, 0)) * CFrame.Angles(0, math.rad(20), 0)
-                            if (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= 10 then
-                                _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.x["HumanoidRootPart"].CFrame.RightVector * 1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character["HumanoidRootPart"].CFrame.RightVector * 1 + player.Character["HumanoidRootPart"].CFrame.LookVector * -1) + _G.x.HumanoidRootPart.Velocity / 3 + player.Character.HumanoidRootPart.CFrame.RightVector * h
+                            if (_G.x.HumanoidRootPart.Position - player.Character.HumanoidRootPart.CFrame.p).Magnitude <= 10 then
+                                _G.pos = player.Character.HumanoidRootPart.CFrame.LookVector * 5 * jo2 + _G.x.HumanoidRootPart.CFrame.RightVector * 1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character.HumanoidRootPart.CFrame.RightVector * 1 + player.Character.HumanoidRootPart.CFrame.LookVector * -1) + _G.x.HumanoidRootPart.Velocity / 3 + player.Character.HumanoidRootPart.CFrame.RightVector * h
                                 jo = jo + 1
                                 if jo == 3 then
                                     h = h * -1
@@ -531,15 +679,20 @@ delay(5, function()
                         end
                         player.Character.Humanoid:Move(_G.pos)
                     end
-                    if player.Character:FindFirstChildOfClass("Tool") then
-                        player.Character:FindFirstChildOfClass("Tool"):Activate()
+                    if not _G.reachMode then -- Spam sword at <= 15 studs
+                        if player.Character:FindFirstChildOfClass("Tool") then
+                            player.Character:FindFirstChildOfClass("Tool"):Activate()
+                        end
                     end
                 end
                 player.Character.Humanoid:MoveTo(_G.pos)
-                if _G.x:FindFirstChildOfClass("Tool") and _G.x:FindFirstChildOfClass("Tool"):FindFirstChild("Handle") then
-                end
             else
                 _G.x = nil
+                if _G.targetHighlight then
+                    _G.targetHighlight:Destroy()
+                    _G.targetHighlight = nil
+                end
+                TargetLabel.Text = "Target:\nNone"
             end
         else
             bg.Parent = ReplicatedStorage
