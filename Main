@@ -34,7 +34,7 @@ MainFrame.Parent = ScreenGui
 
 local UICorner = Instance.new("UICorner")
 UICorner.Name = generateRandomName()
-UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.CornerRadius = UDim.new(0, 12)
 UICorner.Parent = MainFrame
 
 local TitleBar = Instance.new("Frame")
@@ -46,7 +46,7 @@ TitleBar.Parent = MainFrame
 
 local TitleCorner = Instance.new("UICorner")
 TitleCorner.Name = generateRandomName()
-TitleCorner.CornerRadius = UDim.new(0, 10)
+TitleCorner.CornerRadius = UDim.new(0, 12)
 TitleCorner.Parent = TitleBar
 
 local Title = Instance.new("TextLabel")
@@ -72,7 +72,7 @@ MinimizeButton.Parent = TitleBar
 
 local MinimizeCorner = Instance.new("UICorner")
 MinimizeCorner.Name = generateRandomName()
-MinimizeCorner.CornerRadius = UDim.new(0, 10)
+MinimizeCorner.CornerRadius = UDim.new(0, 12)
 MinimizeCorner.Parent = MinimizeButton
 
 local CloseButton = Instance.new("TextButton")
@@ -88,7 +88,7 @@ CloseButton.Parent = TitleBar
 
 local CloseCorner = Instance.new("UICorner")
 CloseCorner.Name = generateRandomName()
-CloseCorner.CornerRadius = UDim.new(0, 10)
+CloseCorner.CornerRadius = UDim.new(0, 12)
 CloseCorner.Parent = CloseButton
 
 local ContentFrame = Instance.new("Frame")
@@ -101,7 +101,7 @@ ContentFrame.Parent = MainFrame
 
 local ContentCorner = Instance.new("UICorner")
 ContentCorner.Name = generateRandomName()
-ContentCorner.CornerRadius = UDim.new(0, 10)
+ContentCorner.CornerRadius = UDim.new(0, 12)
 ContentCorner.Parent = ContentFrame
 
 local ToggleButton = Instance.new("TextButton")
@@ -117,7 +117,7 @@ ToggleButton.Parent = ContentFrame
 
 local ToggleCorner = Instance.new("UICorner")
 ToggleCorner.Name = generateRandomName()
-ToggleCorner.CornerRadius = UDim.new(0, 10)
+ToggleCorner.CornerRadius = UDim.new(0, 12)
 ToggleCorner.Parent = ToggleButton
 
 local HuntButton = Instance.new("TextButton")
@@ -133,7 +133,7 @@ HuntButton.Parent = ContentFrame
 
 local HuntCorner = Instance.new("UICorner")
 HuntCorner.Name = generateRandomName()
-HuntCorner.CornerRadius = UDim.new(0, 10)
+HuntCorner.CornerRadius = UDim.new(0, 12)
 HuntCorner.Parent = HuntButton
 
 local ReachButton = Instance.new("TextButton")
@@ -149,7 +149,7 @@ ReachButton.Parent = ContentFrame
 
 local ReachCorner = Instance.new("UICorner")
 ReachCorner.Name = generateRandomName()
-ReachCorner.CornerRadius = UDim.new(0, 10)
+ReachCorner.CornerRadius = UDim.new(0, 12)
 ReachCorner.Parent = ReachButton
 
 local TargetLabel = Instance.new("TextLabel")
@@ -288,7 +288,7 @@ local Disable = Instance.new("BindableEvent")
 getgenv().configs = {
     connections = {},
     Disable = Disable,
-    Size = Vector3.new(8, 8, 8),
+    Size = Vector3.new(9, 7, 6),
     DeathCheck = true
 }
 
