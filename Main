@@ -20,10 +20,10 @@ local Settings = {
     CirclingMin = -120,
     CirclingMax = 120,
     CirclingDivider = 20,
-    SwordSpamDistance = 20,
+    SwordSpamDistance = 22.5,
     LookAngle = 20,
     TargetSwitchThreshold = 5, -- Studs closer to switch target
-    AutoTargetCheckInterval = 0.01, -- Fastest check interval (seconds)
+    AutoTargetCheckInterval = 0.1, -- Fastest check interval (seconds)
 
     -- UI Settings
     MainFrameSize = UDim2.new(0, 160, 0, 232),
