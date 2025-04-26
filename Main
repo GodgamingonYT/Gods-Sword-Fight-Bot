@@ -26,7 +26,7 @@ local Settings = {
     AutoTargetCheckInterval = 0.1, -- Fastest check interval (seconds)
 
     -- UI Settings
-    MainFrameSize = UDim2.new(0, 160, 0, 232),
+    MainFrameSize = UDim2.new(0, 155, 0, 227),
     MainFramePosition = UDim2.new(0.5, -80, 0.5, -116),
     MainFrameColor = Color3.fromRGB(25, 25, 30),
     TitleBarSize = UDim2.new(1, 0, 0, 24),
