@@ -11,19 +11,19 @@ local player = Players.LocalPlayer
 -- Settings (All Configurable Parameters)
 local Settings = {
     -- Reach Settings
-    ReachRadius = 7, -- Radius of spherical hitbox (studs)
+    ReachRadius = 15, -- Radius of spherical hitbox (studs)
     DeathCheck = true, -- Check if target is alive before hitting
     SwordSpamCooldown = 0.1, -- Cooldown for sword activation (seconds)
-    SwordSpamDistance = 10, -- Distance to spam sword (studs)
+    SwordSpamDistance = 12.5, -- Distance to spam sword (studs)
 
     -- Bot Settings
-    StrafeDistance = 4,
+    StrafeDistance = 5,
     CirclingMin = -120,
     CirclingMax = 120,
     CirclingDivider = 20,
     LookAngle = 20,
     TargetSwitchThreshold = 5, -- Not used for switching, kept for future
-    AutoTargetCheckInterval = 0.001, -- Fastest check interval (seconds)
+    AutoTargetCheckInterval = 0.1, -- Fastest check interval (seconds)
 
     -- UI Settings
     MainFrameSize = UDim2.new(0, 160, 0, 232),
@@ -308,7 +308,9 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 -- Sword Bot Script
-_G.x = nil
+_G.reachTarget = nil
+_G.botTarget = nil
+_G.huntTarget = nil
 _G.huntMode = false
 _G.reachMode = false
 local lastBotActivation = 0
@@ -399,6 +401,19 @@ local function Attack(Tool, TouchPart, ToTouch)
     end
 end
 
+-- Update TargetLabel based on mode priority
+local function updateTargetLabel()
+    if _G.y == 1 and _G.botTarget then
+        TargetLabel.Text = "Target:\n" .. _G.botTarget.Name
+    elseif _G.reachMode and _G.reachTarget then
+        TargetLabel.Text = "Target:\n" .. _G.reachTarget.Name
+    elseif _G.huntMode and _G.huntTarget then
+        TargetLabel.Text = "Target:\n" .. _G.huntTarget.Name
+    else
+        TargetLabel.Text = "Target:\nNone"
+    end
+end
+
 -- Ultra-Minimal Reach Loop
 spawn(function()
     while true do
@@ -420,7 +435,7 @@ spawn(function()
             end
             warn("SwordBot: Reach found Tool: " .. Tool.Name)
 
-            -- Check for any player in range (no target needed)
+            -- Check for any player in range
             local inRange = false
             local closestDistance = math.huge
             local closestPlayer = nil
@@ -436,24 +451,24 @@ spawn(function()
                         end
                         if dist <= Settings.SwordSpamDistance then
                             inRange = true
-                            _G.x = targetChar
-                            TargetLabel.Text = "Target:\n" .. plr.Name
-                            warn("SwordBot: Reach found target " .. plr.Name .. " in range at " .. math.floor(dist) .. " studs")
+                            _G.reachTarget = targetChar
+                            warn("SwordBot: Reach set reachTarget to " .. plr.Name .. " at " .. math.floor(dist) .. " studs")
                             break
                         end
                     end
                 end
             end
 
-            if not inRange and closestPlayer then
-                warn("SwordBot: Reach no targets in range, closest = " .. closestPlayer.Name .. " at " .. math.floor(closestDistance) .. " studs")
-                _G.x = nil
-                TargetLabel.Text = "Target:\nNone"
-            elseif not closestPlayer then
-                warn("SwordBot: Reach no valid players found")
-                _G.x = nil
-                TargetLabel.Text = "Target:\nNone"
+            if not inRange then
+                _G.reachTarget = nil
+                if closestPlayer then
+                    warn("SwordBot: Reach no targets in range, closest = " .. closestPlayer.Name .. " at " .. math.floor(closestDistance) .. " studs")
+                else
+                    warn("SwordBot: Reach no valid players found")
+                end
             end
+
+            updateTargetLabel()
 
             -- Spam Tool:Activate() if in range
             if inRange and tick() - reachCooldown >= Settings.SwordSpamCooldown then
@@ -472,7 +487,7 @@ spawn(function()
                 warn("SwordBot: Reach no activation - cooldown active, time since last = " .. tostring(tick() - reachCooldown))
             end
 
-            -- Hitbox (kept for compatibility)
+            -- Hitbox
             local TouchInterest = GetTouchInterest(Tool)
             local TouchPart = TouchInterest and TouchInterest.Parent
             if TouchPart then
@@ -496,6 +511,9 @@ spawn(function()
             else
                 warn("SwordBot: Reach hitbox skipped - no TouchPart")
             end
+        else
+            _G.reachTarget = nil
+            updateTargetLabel()
         end
     end
 end)
@@ -532,18 +550,22 @@ spawn(function()
     while true do
         task.wait(0.5) -- Check every 0.5s
         if _G.huntMode then
-            local currentTarget = _G.x
+            local currentTarget = _G.huntTarget
             if not currentTarget or not currentTarget:FindFirstChild("Humanoid") or not IsAlive(currentTarget:FindFirstChild("Humanoid")) or not currentTarget:FindFirstChild("HumanoidRootPart") then
                 local closestRootPart = findClosestHumanoidRootPart()
                 if closestRootPart then
-                    _G.x = closestRootPart
-                    TargetLabel.Text = "Target:\n" .. _G.x.Name
+                    _G.huntTarget = closestRootPart
+                    warn("SwordBot: Hunt set huntTarget to " .. _G.huntTarget.Name)
+                    updateTargetLabel()
                 else
-                    _G.x = nil
-                    TargetLabel.Text = "Target:\nNone"
+                    _G.huntTarget = nil
                     warn("SwordBot: No valid target found for Hunt mode")
+                    updateTargetLabel()
                 end
             end
+        else
+            _G.huntTarget = nil
+            updateTargetLabel()
         end
     end
 end)
@@ -554,20 +576,23 @@ spawn(function()
     while true do
         if _G.y == 1 and not _G.huntMode then
             local closestRootPart, closestDistance = findClosestHumanoidRootPart()
-            if closestRootPart and (_G.x ~= closestRootPart) then
-                _G.x = closestRootPart
-                TargetLabel.Text = "Target:\n" .. _G.x.Name
-                warn("SwordBot: Switched to " .. _G.x.Name .. " at " .. math.floor(closestDistance) .. " studs")
-            elseif not closestRootPart and _G.x ~= nil then
-                _G.x = nil
-                TargetLabel.Text = "Target:\nNone"
+            if closestRootPart and (_G.botTarget ~= closestRootPart) then
+                _G.botTarget = closestRootPart
+                warn("SwordBot: Bot set botTarget to " .. _G.botTarget.Name .. " at " .. math.floor(closestDistance) .. " studs")
+                updateTargetLabel()
+            elseif not closestRootPart and _G.botTarget ~= nil then
+                _G.botTarget = nil
                 warn("SwordBot: No valid target found for Bot mode")
+                updateTargetLabel()
             end
 
             checkCount = checkCount + 1
             if checkCount % 1000 == 0 then
                 warn("SwordBot: AutoTarget checked " .. checkCount .. " times")
             end
+        else
+            _G.botTarget = nil
+            updateTargetLabel()
         end
         task.wait(Settings.AutoTargetCheckInterval) -- ~1000Hz
     end
@@ -579,20 +604,17 @@ local function toggleBot()
         _G.y = 0
         ToggleButton.Text = "Bot: OFF"
         ToggleButton.BackgroundColor3 = Settings.ButtonOffColor
-        if not _G.huntMode then
-            _G.x = nil
-            TargetLabel.Text = "Target:\nNone"
-        end
+        _G.botTarget = nil
+        updateTargetLabel()
     else
         _G.y = 1
         ToggleButton.Text = "Bot: ON"
         ToggleButton.BackgroundColor3 = Settings.ButtonOnColor
-        if not _G.huntMode then
-            local closestRootPart = findClosestHumanoidRootPart()
-            if closestRootPart then
-                _G.x = closestRootPart
-                TargetLabel.Text = "Target:\n" .. _G.x.Name
-            end
+        local closestRootPart = findClosestHumanoidRootPart()
+        if closestRootPart then
+            _G.botTarget = closestRootPart
+            warn("SwordBot: Bot set botTarget to " .. _G.botTarget.Name)
+            updateTargetLabel()
         end
     end
 end
@@ -605,23 +627,24 @@ local function toggleHunt()
         _G.huntMode = false
         HuntButton.Text = "Hunt: OFF"
         HuntButton.BackgroundColor3 = Settings.ButtonOffColor
-        _G.x = nil
-        TargetLabel.Text = "Target:\nNone"
+        _G.huntTarget = nil
         warn("SwordBot: Target reset on Hunt mode disable")
+        updateTargetLabel()
     else
         _G.huntMode = true
         HuntButton.Text = "Hunt: ON"
         HuntButton.BackgroundColor3 = Settings.ButtonOnColor
         local closestRootPart = findClosestHumanoidRootPart()
         if closestRootPart then
-            _G.x = closestRootPart
-            TargetLabel.Text = "Target:\n" .. _G.x.Name
+            _G.huntTarget = closestRootPart
+            warn("SwordBot: Hunt set huntTarget to " .. _G.huntTarget.Name)
+            updateTargetLabel()
         else
             _G.huntMode = false
             HuntButton.Text = "Hunt: OFF"
             HuntButton.BackgroundColor3 = Settings.ButtonOffColor
-            TargetLabel.Text = "Target:\nNone"
             warn("SwordBot: No valid target found for Hunt mode")
+            updateTargetLabel()
         end
     end
 end
@@ -637,6 +660,8 @@ local function toggleReach()
         if ReachButton.Text ~= "Reach: OFF" then
             warn("SwordBot: Failed to update ReachButton text to OFF")
         end
+        _G.reachTarget = nil
+        updateTargetLabel()
         if getgenv().configs and getgenv().configs.connections then
             local Disable = getgenv().configs.Disable
             for _, v in ipairs(getgenv().configs.connections) do
@@ -669,7 +694,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
     end
 end)
 
--- Original Script Core
+-- Original Script Core (Bot Movement and Activation)
 local numba = Instance.new("NumberValue", Workspace)
 numba.Value = -40
 delay(0, function()
@@ -688,65 +713,65 @@ delay(5, function()
     bg.MaxTorque = Vector3.new(400000000, 400000000, 400000000)
 
     RunService.RenderStepped:Connect(function()
-        if _G.x ~= nil and _G.x:FindFirstChild("HumanoidRootPart") and _G.y == 1 and player.Character and player.Character.Humanoid.Health > 0 then
-            if _G.x:FindFirstChild("Humanoid") and _G.x.Humanoid.Health > 0 then
+        if _G.botTarget ~= nil and _G.botTarget:FindFirstChild("HumanoidRootPart") and _G.y == 1 and player.Character and player.Character.Humanoid.Health > 0 then
+            if _G.botTarget:FindFirstChild("Humanoid") and _G.botTarget.Humanoid.Health > 0 then
                 bg.Parent = player.Character.HumanoidRootPart
                 local torso = player.Character.HumanoidRootPart.CFrame.p + player.Character.HumanoidRootPart.CFrame.LookVector * 1 + player.Character.HumanoidRootPart.CFrame.RightVector * 1
-                local torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
+                local torso2 = _G.botTarget.HumanoidRootPart.Position + _G.botTarget.HumanoidRootPart.Velocity / 10
                 if h2 == 0 then
-                    torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
+                    torso2 = _G.botTarget.HumanoidRootPart.Position + _G.botTarget.HumanoidRootPart.Velocity / 10
                 elseif h2 == 1 then
-                    torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / Settings.CirclingDivider)
+                    torso2 = _G.botTarget.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / Settings.CirclingDivider)
                 end
                 bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.y, 0), torso2 - Vector3.new(0, torso2.y, 0)) * CFrame.Angles(0, math.rad(Settings.LookAngle), 0)
-                _G.pos = _G.x["HumanoidRootPart"].Position + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * 0 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6
+                _G.pos = _G.botTarget["HumanoidRootPart"].Position + _G.botTarget["HumanoidRootPart"].CFrame.RightVector * -1 + _G.botTarget.HumanoidRootPart.CFrame.LookVector * 0 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6
 
-                if _G.x.HumanoidRootPart.Position.y - 0.5 > player.Character.HumanoidRootPart.Position.y then
+                if _G.botTarget.HumanoidRootPart.Position.y - 0.5 > player.Character.HumanoidRootPart.Position.y then
                     delay(0, function() player.Character.Humanoid.Jump = true end)
                 end
-                if _G.x.HumanoidRootPart.Velocity.z >= player.Character.HumanoidRootPart.CFrame.LookVector.z or _G.x.HumanoidRootPart.Velocity.x >= player.Character.HumanoidRootPart.CFrame.LookVector.x then
-                    _G.pos = _G.x["HumanoidRootPart"].Position + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6 - _G.x.HumanoidRootPart.Velocity / 2
+                if _G.botTarget.HumanoidRootPart.Velocity.z >= player.Character.HumanoidRootPart.CFrame.LookVector.z or _G.botTarget.HumanoidRootPart.Velocity.x >= player.Character.HumanoidRootPart.CFrame.LookVector.x then
+                    _G.pos = _G.botTarget["HumanoidRootPart"].Position + _G.botTarget["HumanoidRootPart"].CFrame.RightVector * -1 + _G.botTarget.HumanoidRootPart.CFrame.LookVector * -1 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6 - _G.botTarget.HumanoidRootPart.Velocity / 2
                     local torso = player.Character.HumanoidRootPart.CFrame.p + player.Character.HumanoidRootPart.CFrame.LookVector * 1 + player.Character.HumanoidRootPart.CFrame.RightVector * 1
-                    local torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
+                    local torso2 = _G.botTarget.HumanoidRootPart.Position + _G.botTarget.HumanoidRootPart.Velocity / 10
                     if h2 == 0 then
-                        torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
+                        torso2 = _G.botTarget.HumanoidRootPart.Position + _G.botTarget.HumanoidRootPart.Velocity / 10
                     elseif h2 == 1 then
-                        torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / Settings.CirclingDivider)
+                        torso2 = _G.botTarget.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / Settings.CirclingDivider)
                     end
                     bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.y, 0), torso2 - Vector3.new(0, torso2.y, 0)) * CFrame.Angles(0, math.rad(Settings.LookAngle), 0)
-                    if (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= 10 then
-                        _G.pos = _G.x["HumanoidRootPart"].Position + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character["HumanoidRootPart"].CFrame.RightVector * 1 + player.Character["HumanoidRootPart"].CFrame.LookVector * -1) - _G.x.HumanoidRootPart.Velocity / 5 + player.Character.HumanoidRootPart.CFrame.RightVector * h
+                    if (_G.botTarget["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= Settings.SwordSpamDistance then
+                        _G.pos = _G.botTarget["HumanoidRootPart"].Position + _G.botTarget["HumanoidRootPart"].CFrame.RightVector * -1 + _G.botTarget.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character["HumanoidRootPart"].CFrame.RightVector * 1 + player.Character["HumanoidRootPart"].CFrame.LookVector * -1) - _G.botTarget.HumanoidRootPart.Velocity / 5 + player.Character.HumanoidRootPart.CFrame.RightVector * h
                         jo = jo + 1
                         if jo == 3 then
                             h = h * -1
                         end
                     end
-                elseif _G.x.HumanoidRootPart.Velocity.z <= player.Character.HumanoidRootPart.CFrame.LookVector.z or _G.x.HumanoidRootPart.Velocity.x <= player.Character.HumanoidRootPart.CFrame.LookVector.x then
-                    _G.pos = _G.x["HumanoidRootPart"].Position + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6 + _G.x.HumanoidRootPart.Velocity / 10
+                elseif _G.botTarget.HumanoidRootPart.Velocity.z <= player.Character.HumanoidRootPart.CFrame.LookVector.z or _G.botTarget.HumanoidRootPart.Velocity.x <= player.Character.HumanoidRootPart.CFrame.LookVector.x then
+                    _G.pos = _G.botTarget["HumanoidRootPart"].Position + _G.botTarget["HumanoidRootPart"].CFrame.RightVector * -1 + _G.botTarget.HumanoidRootPart.CFrame.LookVector * -1 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6 + _G.botTarget.HumanoidRootPart.Velocity / 10
                     local torso = player.Character.HumanoidRootPart.CFrame.p + player.Character.HumanoidRootPart.CFrame.LookVector * 1 + player.Character.HumanoidRootPart.CFrame.RightVector * 1
-                    local torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
+                    local torso2 = _G.botTarget.HumanoidRootPart.Position + _G.botTarget.HumanoidRootPart.Velocity / 10
                     if h2 == 0 then
-                        torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
+                        torso2 = _G.botTarget.HumanoidRootPart.Position + _G.botTarget.HumanoidRootPart.Velocity / 10
                     elseif h2 == 1 then
-                        torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / Settings.CirclingDivider)
+                        torso2 = _G.botTarget.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / Settings.CirclingDivider)
                     end
                     bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.y, 0), torso2 - Vector3.new(0, torso2.y, 0)) * CFrame.Angles(0, math.rad(Settings.LookAngle), 0)
-                    if (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= 10 then
-                        _G.pos = _G.x["HumanoidRootPart"].Position + _G.x["HumanoidRootPart"].CFrame.RightVector * 1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character["HumanoidRootPart"].CFrame.RightVector * 1 + player.Character["HumanoidRootPart"].CFrame.LookVector * -1) + _G.x.HumanoidRootPart.Velocity / 3 + player.Character.HumanoidRootPart.CFrame.RightVector * h
+                    if (_G.botTarget["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= Settings.SwordSpamDistance then
+                        _G.pos = _G.botTarget["HumanoidRootPart"].Position + _G.botTarget["HumanoidRootPart"].CFrame.RightVector * 1 + _G.botTarget.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character["HumanoidRootPart"].CFrame.RightVector * 1 + player.Character["HumanoidRootPart"].CFrame.LookVector * -1) + _G.botTarget.HumanoidRootPart.Velocity / 3 + player.Character.HumanoidRootPart.CFrame.RightVector * h
                         jo = jo + 1
                         if jo == 3 then
                             h = h * -1
                         end
                     end
                 end
-                if (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= 10 then
+                if (_G.botTarget["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= Settings.SwordSpamDistance then
                     h2 = 1
                 else
                     h2 = 0
                 end
-                -- Sword activation at 10 studs
+                -- Sword activation at 15 studs
                 local Tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
-                local distance = (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).Magnitude
+                local distance = (_G.botTarget["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).Magnitude
                 if Tool and distance <= Settings.SwordSpamDistance and tick() - lastBotActivation >= Settings.SwordSpamCooldown then
                     Tool:Activate()
                     lastBotActivation = tick()
@@ -754,9 +779,9 @@ delay(5, function()
                 end
                 -- Movement logic with hhh for close-range circling
                 if distance <= Settings.SwordSpamDistance then
-                    if (_G.x["HumanoidRootPart"].Position - player.Character["Right Arm"].CFrame.p).magnitude <= Settings.SwordSpamDistance or hhh == true then
+                    if (_G.botTarget["HumanoidRootPart"].Position - player.Character["Right Arm"].CFrame.p).magnitude <= Settings.SwordSpamDistance or hhh == true then
                         hhh = true
-                        if (_G.x["HumanoidRootPart"].Position - player.Character["Right Arm"].CFrame.p).magnitude >= Settings.SwordSpamDistance + 2 then
+                        if (_G.botTarget["HumanoidRootPart"].Position - player.Character["Right Arm"].CFrame.p).magnitude >= Settings.SwordSpamDistance + 2 then
                             hhh = false
                         end
                         if jo2 == 0 then
@@ -764,37 +789,37 @@ delay(5, function()
                         else
                             jo2 = 0
                         end
-                        _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.x.HumanoidRootPart.Velocity / 20
-                        if _G.x.HumanoidRootPart.Velocity.z >= player.Character.HumanoidRootPart.CFrame.LookVector.z or _G.x.HumanoidRootPart.Velocity.x >= player.Character.HumanoidRootPart.CFrame.LookVector.x then
-                            _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6 - _G.x.HumanoidRootPart.Velocity / 2
+                        _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.botTarget.HumanoidRootPart.Velocity / 20
+                        if _G.botTarget.HumanoidRootPart.Velocity.z >= player.Character.HumanoidRootPart.CFrame.LookVector.z or _G.botTarget.HumanoidRootPart.Velocity.x >= player.Character.HumanoidRootPart.CFrame.LookVector.x then
+                            _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.botTarget["HumanoidRootPart"].CFrame.RightVector * -1 + _G.botTarget.HumanoidRootPart.CFrame.LookVector * -1 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6 - _G.botTarget.HumanoidRootPart.Velocity / 2
                             local torso = player.Character.HumanoidRootPart.CFrame.p + player.Character.HumanoidRootPart.CFrame.LookVector * 1 + player.Character.HumanoidRootPart.CFrame.RightVector * 1
-                            local torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
+                            local torso2 = _G.botTarget.HumanoidRootPart.Position + _G.botTarget.HumanoidRootPart.Velocity / 10
                             if h2 == 0 then
-                                torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
+                                torso2 = _G.botTarget.HumanoidRootPart.Position + _G.botTarget.HumanoidRootPart.Velocity / 10
                             elseif h2 == 1 then
-                                torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / Settings.CirclingDivider)
+                                torso2 = _G.botTarget.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / Settings.CirclingDivider)
                             end
                             bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.y, 0), torso2 - Vector3.new(0, torso2.y, 0)) * CFrame.Angles(0, math.rad(Settings.LookAngle), 0)
                             bg.D = 1
-                            if (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= 10 then
-                                _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character["HumanoidRootPart"].CFrame.RightVector * 1 + player.Character["HumanoidRootPart"].CFrame.LookVector * -1) - _G.x.HumanoidRootPart.Velocity / 5 + player.Character.HumanoidRootPart.CFrame.RightVector * h
+                            if (_G.botTarget["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= Settings.SwordSpamDistance then
+                                _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.botTarget["HumanoidRootPart"].CFrame.RightVector * -1 + _G.botTarget.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character["HumanoidRootPart"].CFrame.RightVector * 1 + player.Character["HumanoidRootPart"].CFrame.LookVector * -1) - _G.botTarget.HumanoidRootPart.Velocity / 5 + player.Character.HumanoidRootPart.CFrame.RightVector * h
                                 jo = jo + 1
                                 if jo == 3 then
                                     h = h * -1
                                 end
                             end
-                        elseif _G.x.HumanoidRootPart.Velocity.z <= player.Character.HumanoidRootPart.CFrame.LookVector.z or _G.x.HumanoidRootPart.Velocity.x <= player.Character.HumanoidRootPart.CFrame.LookVector.x then
-                            _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.x["HumanoidRootPart"].CFrame.RightVector * -1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6 + _G.x.HumanoidRootPart.Velocity / 10
+                        elseif _G.botTarget.HumanoidRootPart.Velocity.z <= player.Character.HumanoidRootPart.CFrame.LookVector.z or _G.botTarget.HumanoidRootPart.Velocity.x <= player.Character.HumanoidRootPart.CFrame.LookVector.x then
+                            _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.botTarget["HumanoidRootPart"].CFrame.RightVector * -1 + _G.botTarget.HumanoidRootPart.CFrame.LookVector * -1 + player.Character["HumanoidRootPart"].CFrame.RightVector * 6 + _G.botTarget.HumanoidRootPart.Velocity / 10
                             local torso = player.Character.HumanoidRootPart.CFrame.p + player.Character.HumanoidRootPart.CFrame.LookVector * 1 + player.Character.HumanoidRootPart.CFrame.RightVector * 1
-                            local torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
+                            local torso2 = _G.botTarget.HumanoidRootPart.Position + _G.botTarget.HumanoidRootPart.Velocity / 10
                             if h2 == 0 then
-                                torso2 = _G.x.HumanoidRootPart.Position + _G.x.HumanoidRootPart.Velocity / 10
+                                torso2 = _G.botTarget.HumanoidRootPart.Position + _G.botTarget.HumanoidRootPart.Velocity / 10
                             elseif h2 == 1 then
-                                torso2 = _G.x.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / Settings.CirclingDivider)
+                                torso2 = _G.botTarget.HumanoidRootPart.Position + player.Character.HumanoidRootPart.CFrame.RightVector * (numba.Value / Settings.CirclingDivider)
                             end
                             bg.CFrame = CFrame.new(torso - Vector3.new(0, torso.y, 0), torso2 - Vector3.new(0, torso2.y, 0)) * CFrame.Angles(0, math.rad(Settings.LookAngle), 0)
-                            if (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= 10 then
-                                _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.x["HumanoidRootPart"].CFrame.RightVector * 1 + _G.x.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character["HumanoidRootPart"].CFrame.RightVector * 1 + player.Character["HumanoidRootPart"].CFrame.LookVector * -1) + _G.x.HumanoidRootPart.Velocity / 3 + player.Character.HumanoidRootPart.CFrame.RightVector * h
+                            if (_G.botTarget["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= Settings.SwordSpamDistance then
+                                _G.pos = player.Character["HumanoidRootPart"].CFrame.LookVector * 5 * jo2 + _G.botTarget["HumanoidRootPart"].CFrame.RightVector * 1 + _G.botTarget.HumanoidRootPart.CFrame.LookVector * -1 + (player.Character["HumanoidRootPart"].CFrame.RightVector * 1 + player.Character["HumanoidRootPart"].CFrame.LookVector * -1) + _G.botTarget.HumanoidRootPart.Velocity / 3 + player.Character.HumanoidRootPart.CFrame.RightVector * h
                                 jo = jo + 1
                                 if jo == 3 then
                                     h = h * -1
@@ -805,18 +830,15 @@ delay(5, function()
                     end
                 end
                 player.Character.Humanoid:MoveTo(_G.pos)
-                if _G.x:FindFirstChildOfClass("Tool") and _G.x:FindFirstChildOfClass("Tool"):FindFirstChild("Handle") then
+                if _G.botTarget:FindFirstChildOfClass("Tool") and _G.botTarget:FindFirstChildOfClass("Tool"):FindFirstChild("Handle") then
                 end
             else
                 if _G.huntMode then
-                    _G.x = nil
-                    _G.huntMode = false
-                    HuntButton.Text = "Hunt: OFF"
-                    HuntButton.BackgroundColor3 = Settings.ButtonOffColor
-                    TargetLabel.Text = "Target:\nNone"
+                    _G.botTarget = nil
+                    updateTargetLabel()
                 else
-                    _G.x = nil
-                    TargetLabel.Text = "Target:\nNone"
+                    _G.botTarget = nil
+                    updateTargetLabel()
                 end
             end
         else
