@@ -11,7 +11,7 @@ local player = Players.LocalPlayer
 -- Settings (All Configurable Parameters)
 local Settings = {
     -- Reach Settings
-    ReachRadius = 15, -- Radius of spherical hitbox (studs)
+    ReachRadius = 7, -- Radius of spherical hitbox (studs)
     DeathCheck = true, -- Check if target is alive before hitting
     SwordSpamCooldown = 0.1, -- Cooldown for sword activation (seconds)
     SwordSpamDistance = 12.5, -- Distance to spam sword (studs)
