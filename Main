@@ -11,7 +11,7 @@ local player = Players.LocalPlayer
 -- Settings (All Configurable Parameters)
 local Settings = {
     -- Reach Settings
-    ReachRadius = 7, -- Radius of spherical hitbox (studs)
+    ReachRadius = 6.5, -- Radius of spherical hitbox (studs)
     DeathCheck = true, -- Check if target is alive before hitting
     SwordSpamCooldown = 0.1, -- Cooldown for sword activation (seconds)
 
@@ -20,7 +20,7 @@ local Settings = {
     CirclingMin = -120,
     CirclingMax = 120,
     CirclingDivider = 20,
-    SwordSpamDistance = 25,
+    SwordSpamDistance = 30,
     LookAngle = 20,
     TargetSwitchThreshold = 5, -- Studs closer to switch target
     AutoTargetCheckInterval = 0.1, -- Fastest check interval (seconds)
