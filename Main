@@ -14,7 +14,7 @@ local Settings = {
     ReachRadius = 7, -- Radius of spherical hitbox (studs)
     DeathCheck = true, -- Check if target is alive before hitting
     SwordSpamCooldown = 0.1, -- Cooldown for sword activation (seconds)
-    SwordSpamDistance = 10, -- Distance to spam sword (studs)
+    SwordSpamDistance = 15, -- Distance to spam sword (studs)
 
     -- Bot Settings
     StrafeDistance = 4,
