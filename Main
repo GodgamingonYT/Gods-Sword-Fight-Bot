@@ -11,22 +11,22 @@ local player = Players.LocalPlayer
 -- Settings (All Configurable Parameters)
 local Settings = {
     -- Reach Settings
-    ReachRadius = 6.5, -- Radius of spherical hitbox (studs)
+    ReachRadius = 7, -- Radius of spherical hitbox (studs)
     DeathCheck = true, -- Check if target is alive before hitting
     SwordSpamCooldown = 0.1, -- Cooldown for sword activation (seconds)
+    SwordSpamDistance = 15, -- Distance to spam sword (studs)
 
     -- Bot Settings
     StrafeDistance = 4,
     CirclingMin = -120,
     CirclingMax = 120,
     CirclingDivider = 20,
-    SwordSpamDistance = 10,
     LookAngle = 20,
-    TargetSwitchThreshold = 0, -- Studs closer to switch target
-    AutoTargetCheckInterval = 0.1, -- Fastest check interval (seconds)
+    TargetSwitchThreshold = 5, -- Not used for switching, kept for future
+    AutoTargetCheckInterval = 0.001, -- Fastest check interval (seconds)
 
     -- UI Settings
-    MainFrameSize = UDim2.new(0, 155, 0, 227),
+    MainFrameSize = UDim2.new(0, 160, 0, 232),
     MainFramePosition = UDim2.new(0.5, -80, 0.5, -116),
     MainFrameColor = Color3.fromRGB(25, 25, 30),
     TitleBarSize = UDim2.new(1, 0, 0, 24),
@@ -311,7 +311,8 @@ end)
 _G.x = nil
 _G.huntMode = false
 _G.reachMode = false
-local lastActivation = 0
+local lastBotActivation = 0
+local reachCooldown = 0
 Grips = {
     Up = CFrame.new(0, 0, -1.70000005, 0, 0, 1, 1, 0, 0, 0, 1, 0),
     Out = CFrame.new(0, 0, -1.70000005, 0, 1, 0, 1, -0, 0, 0, 0, -1)
@@ -398,67 +399,112 @@ local function Attack(Tool, TouchPart, ToTouch)
     end
 end
 
--- Simple While Loop for Reach
+-- Ultra-Minimal Reach Loop
 spawn(function()
     while true do
-        task.wait(Settings.SwordSpamCooldown) -- 0.1s to match spam rate
+        task.wait(Settings.SwordSpamCooldown) -- 0.1s
+        warn("SwordBot: Reach loop iteration, reachMode = " .. tostring(_G.reachMode))
+        
         if _G.reachMode then
             local char = getchar()
-            if IsAlive(gethumanoid(char)) then
-                local Tool = char and char:FindFirstChildWhichIsA("Tool")
-                local TouchInterest = Tool and GetTouchInterest(Tool)
-                local TouchPart = TouchInterest and TouchInterest.Parent
-                if Tool and TouchPart then
-                    -- Spam Tool:Activate() if target is in range
-                    local target = _G.x
-                    local inRange = false
-                    if target and target:FindFirstChild("HumanoidRootPart") and IsAlive(gethumanoid(target)) then
-                        local distance = (target.HumanoidRootPart.Position - char.HumanoidRootPart.Position).Magnitude
-                        if distance <= Settings.SwordSpamDistance then
+            if not char or not char:FindFirstChild("HumanoidRootPart") then
+                warn("SwordBot: Reach failed - no character or HumanoidRootPart")
+                continue
+            end
+            warn("SwordBot: Reach character found, HRP position = " .. tostring(char.HumanoidRootPart.Position))
+
+            local Tool = char:FindFirstChildWhichIsA("Tool")
+            if not Tool then
+                warn("SwordBot: Reach failed - no Tool equipped")
+                continue
+            end
+            warn("SwordBot: Reach found Tool: " .. Tool.Name)
+
+            -- Check for any player in range (no target needed)
+            local inRange = false
+            local closestDistance = math.huge
+            local closestPlayer = nil
+            for _, plr in pairs(Players:GetPlayers()) do
+                if plr ~= player then
+                    local targetChar = getchar(plr)
+                    if targetChar and targetChar:FindFirstChild("HumanoidRootPart") then
+                        local dist = (char.HumanoidRootPart.Position - targetChar.HumanoidRootPart.Position).Magnitude
+                        warn("SwordBot: Reach checked player " .. plr.Name .. " at " .. math.floor(dist) .. " studs")
+                        if dist < closestDistance then
+                            closestDistance = dist
+                            closestPlayer = plr
+                        end
+                        if dist <= Settings.SwordSpamDistance then
                             inRange = true
+                            _G.x = targetChar
+                            TargetLabel.Text = "Target:\n" .. plr.Name
+                            warn("SwordBot: Reach found target " .. plr.Name .. " in range at " .. math.floor(dist) .. " studs")
+                            break
                         end
                     end
-                    if inRange and tick() - lastActivation >= Settings.SwordSpamCooldown then
-                        Tool:Activate()
-                        lastActivation = tick()
-                    end
-                    -- Spherical hitbox hits
-                    local Characters = GetCharacters(char)
-                    Ignorelist.FilterDescendantsInstances = Characters
-                    local InstancesInRadius = Workspace:GetPartBoundsInRadius(TouchPart.Position, Settings.ReachRadius, Ignorelist)
-                    for _, v in ipairs(InstancesInRadius) do
-                        local Character = v:FindFirstAncestorWhichIsA("Model")
-                        if table.find(Characters, Character) then
-                            if Settings.DeathCheck then
-                                if IsAlive(gethumanoid(Character)) then
-                                    Attack(Tool, TouchPart, v)
-                                    if tick() - lastActivation >= Settings.SwordSpamCooldown then
-                                        Tool:Activate()
-                                        lastActivation = tick()
-                                    end
-                                end
-                            else
-                                Attack(Tool, TouchPart, v)
-                                if tick() - lastActivation >= Settings.SwordSpamCooldown then
-                                    Tool:Activate()
-                                    lastActivation = tick()
-                                end
-                            end
-                        end
-                    end
-                else
-                    warn("SwordBot: Reach enabled but no Tool or TouchPart found")
                 end
+            end
+
+            if not inRange and closestPlayer then
+                warn("SwordBot: Reach no targets in range, closest = " .. closestPlayer.Name .. " at " .. math.floor(closestDistance) .. " studs")
+                _G.x = nil
+                TargetLabel.Text = "Target:\nNone"
+            elseif not closestPlayer then
+                warn("SwordBot: Reach no valid players found")
+                _G.x = nil
+                TargetLabel.Text = "Target:\nNone"
+            end
+
+            -- Spam Tool:Activate() if in range
+            if inRange and tick() - reachCooldown >= Settings.SwordSpamCooldown then
+                local success, errorMsg = pcall(function()
+                    Tool:Activate()
+                end)
+                if success then
+                    warn("SwordBot: Reach activated Tool: " .. Tool.Name .. " at " .. math.floor(closestDistance) .. " studs")
+                else
+                    warn("SwordBot: Reach Tool:Activate() failed: " .. tostring(errorMsg))
+                end
+                reachCooldown = tick()
+            elseif not inRange then
+                warn("SwordBot: Reach no activation - no targets in range")
+            else
+                warn("SwordBot: Reach no activation - cooldown active, time since last = " .. tostring(tick() - reachCooldown))
+            end
+
+            -- Hitbox (kept for compatibility)
+            local TouchInterest = GetTouchInterest(Tool)
+            local TouchPart = TouchInterest and TouchInterest.Parent
+            if TouchPart then
+                local Characters = GetCharacters(char)
+                Ignorelist.FilterDescendantsInstances = Characters
+                local InstancesInRadius = Workspace:GetPartBoundsInRadius(TouchPart.Position, Settings.ReachRadius, Ignorelist)
+                for _, v in ipairs(InstancesInRadius) do
+                    local Character = v:FindFirstAncestorWhichIsA("Model")
+                    if table.find(Characters, Character) then
+                        if Settings.DeathCheck then
+                            if IsAlive(gethumanoid(Character)) then
+                                Attack(Tool, TouchPart, v)
+                                warn("SwordBot: Reach hitbox hit " .. Character.Name .. " at " .. math.floor((v.Position - char.HumanoidRootPart.Position).Magnitude) .. " studs")
+                            end
+                        else
+                            Attack(Tool, TouchPart, v)
+                            warn("SwordBot: Reach hitbox hit " .. Character.Name .. " at " .. math.floor((v.Position - char.HumanoidRootPart.Position).Magnitude) .. " studs")
+                        end
+                    end
+                end
+            else
+                warn("SwordBot: Reach hitbox skipped - no TouchPart")
             end
         end
     end
 end)
 
--- Find Closest HumanoidRootPart (Optimized)
+-- Find Closest HumanoidRootPart (Simplified, kept for Hunt/Bot)
 local function findClosestHumanoidRootPart()
     local char = getchar()
     local localPlayerRoot = char and char:FindFirstChild("HumanoidRootPart")
-    if not localPlayerRoot then return nil end
+    if not localPlayerRoot then return nil, nil end
     local localPlayerPosition = localPlayerRoot.Position
 
     local closestRootPart = nil
@@ -478,7 +524,7 @@ local function findClosestHumanoidRootPart()
             end
         end
     end
-    return closestRootPart
+    return closestRootPart, closestDistance
 end
 
 -- Hunt Mode Targeting Loop
@@ -502,34 +548,20 @@ spawn(function()
     end
 end)
 
--- Auto-Target Function (Bot Mode, Fast While Loop)
+-- Auto-Target Function (Bot Mode, Always Nearest)
 spawn(function()
     local checkCount = 0
     while true do
         if _G.y == 1 and not _G.huntMode then
-            local currentTarget = _G.x
-            local closestRootPart = findClosestHumanoidRootPart()
-            local shouldSwitch = false
-
-            if not currentTarget or not currentTarget:FindFirstChild("Humanoid") or not IsAlive(currentTarget:FindFirstChild("Humanoid")) or not currentTarget:FindFirstChild("HumanoidRootPart") then
-                shouldSwitch = true
-            elseif closestRootPart and closestRootPart ~= currentTarget then
-                local localPlayerPosition = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart.Position
-                if localPlayerPosition then
-                    local currentDistance = (currentTarget.HumanoidRootPart.Position - localPlayerPosition).Magnitude
-                    local newDistance = (closestRootPart.HumanoidRootPart.Position - localPlayerPosition).Magnitude
-                    if newDistance < currentDistance - Settings.TargetSwitchThreshold then
-                        shouldSwitch = true
-                    end
-                end
-            end
-
-            if shouldSwitch and closestRootPart then
+            local closestRootPart, closestDistance = findClosestHumanoidRootPart()
+            if closestRootPart and (_G.x ~= closestRootPart) then
                 _G.x = closestRootPart
                 TargetLabel.Text = "Target:\n" .. _G.x.Name
-            elseif not closestRootPart then
+                warn("SwordBot: Switched to " .. _G.x.Name .. " at " .. math.floor(closestDistance) .. " studs")
+            elseif not closestRootPart and _G.x ~= nil then
                 _G.x = nil
                 TargetLabel.Text = "Target:\nNone"
+                warn("SwordBot: No valid target found for Bot mode")
             end
 
             checkCount = checkCount + 1
@@ -712,10 +744,19 @@ delay(5, function()
                 else
                     h2 = 0
                 end
-                if (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).magnitude <= Settings.SwordSpamDistance then
-                    if (_G.x["HumanoidRootPart"].Position - player.Character["Right Arm"].CFrame.p).magnitude <= 5 or hhh == true then
+                -- Sword activation at 10 studs
+                local Tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
+                local distance = (_G.x["HumanoidRootPart"].Position - player.Character["HumanoidRootPart"].CFrame.p).Magnitude
+                if Tool and distance <= Settings.SwordSpamDistance and tick() - lastBotActivation >= Settings.SwordSpamCooldown then
+                    Tool:Activate()
+                    lastBotActivation = tick()
+                    warn("SwordBot: Bot activated sword at " .. math.floor(distance) .. " studs")
+                end
+                -- Movement logic with hhh for close-range circling
+                if distance <= Settings.SwordSpamDistance then
+                    if (_G.x["HumanoidRootPart"].Position - player.Character["Right Arm"].CFrame.p).magnitude <= Settings.SwordSpamDistance or hhh == true then
                         hhh = true
-                        if (_G.x["HumanoidRootPart"].Position - player.Character["Right Arm"].CFrame.p).magnitude >= 7 then
+                        if (_G.x["HumanoidRootPart"].Position - player.Character["Right Arm"].CFrame.p).magnitude >= Settings.SwordSpamDistance + 2 then
                             hhh = false
                         end
                         if jo2 == 0 then
@@ -761,12 +802,6 @@ delay(5, function()
                             end
                         end
                         player.Character.Humanoid:Move(_G.pos)
-                    end
-                    -- Sword activation with cooldown
-                    local Tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
-                    if Tool and tick() - lastActivation >= Settings.SwordSpamCooldown then
-                        Tool:Activate()
-                        lastActivation = tick()
                     end
                 end
                 player.Character.Humanoid:MoveTo(_G.pos)
