@@ -22,7 +22,7 @@ local Settings = {
     CirclingDivider = 20,
     SwordSpamDistance = 30,
     LookAngle = 20,
-    TargetSwitchThreshold = 5, -- Studs closer to switch target
+    TargetSwitchThreshold = 0, -- Studs closer to switch target
     AutoTargetCheckInterval = 0.1, -- Fastest check interval (seconds)
 
     -- UI Settings
